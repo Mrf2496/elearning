@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { View } from './types';
 import { courseData } from './constants/courseData';
@@ -92,6 +93,91 @@ export default function App() {
           console.error(`Failed to seed audio database for ${submoduleId_1_3}:`, error);
         } finally {
           localStorage.setItem(audioSeedFlag_1_3, 'true');
+        }
+      }
+
+      // --- Submodule 2-1 ---
+      const submoduleId_2_1 = '2-1';
+      const audioSeedFlag_2_1 = `seeded_audio_preview_v2_${submoduleId_2_1}`;
+      if (!localStorage.getItem(audioSeedFlag_2_1)) {
+         try {
+          const rawUrl = 'https://drive.google.com/file/d/1SKXmmMwUeFblQCODQPtvuV8_UFgABMEc/view?usp=drive_link';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveAudioUrl(submoduleId_2_1, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed audio database for ${submoduleId_2_1}:`, error);
+        } finally {
+          localStorage.setItem(audioSeedFlag_2_1, 'true');
+        }
+      }
+
+      // --- Submodule 2-2 ---
+      const submoduleId_2_2 = '2-2';
+      const audioSeedFlag_2_2 = `seeded_audio_preview_v2_${submoduleId_2_2}`;
+      if (!localStorage.getItem(audioSeedFlag_2_2)) {
+         try {
+          const rawUrl = 'https://drive.google.com/file/d/1XlHvsAVzeJTcjbFdDQcrlpLOWWLmgKkS/view?usp=drive_link';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveAudioUrl(submoduleId_2_2, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed audio database for ${submoduleId_2_2}:`, error);
+        } finally {
+          localStorage.setItem(audioSeedFlag_2_2, 'true');
+        }
+      }
+
+      // --- Submodule 2-3 ---
+      const submoduleId_2_3 = '2-3';
+      const audioSeedFlag_2_3 = `seeded_audio_preview_v2_${submoduleId_2_3}`;
+      if (!localStorage.getItem(audioSeedFlag_2_3)) {
+         try {
+          const rawUrl = 'https://drive.google.com/file/d/1-daYLdD0iKoBVfYS3o8BcAxXE5br7J05/view?usp=drive_link';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveAudioUrl(submoduleId_2_3, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed audio database for ${submoduleId_2_3}:`, error);
+        } finally {
+          localStorage.setItem(audioSeedFlag_2_3, 'true');
+        }
+      }
+
+      // --- Submodule 3-1 ---
+      const submoduleId_3_1 = '3-1';
+      const audioSeedFlag_3_1 = `seeded_audio_preview_v2_${submoduleId_3_1}`;
+      if (!localStorage.getItem(audioSeedFlag_3_1)) {
+         try {
+          const rawUrl = 'https://drive.google.com/file/d/1ffmhAPnh-eI2vxVD68jfnj8Ji14WZ0eE/view?usp=drive_link';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveAudioUrl(submoduleId_3_1, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed audio database for ${submoduleId_3_1}:`, error);
+        } finally {
+          localStorage.setItem(audioSeedFlag_3_1, 'true');
+        }
+      }
+
+      // --- Submodule 3-2 ---
+      const submoduleId_3_2 = '3-2';
+      const audioSeedFlag_3_2 = `seeded_audio_preview_v2_${submoduleId_3_2}`;
+      if (!localStorage.getItem(audioSeedFlag_3_2)) {
+         try {
+          const rawUrl = 'https://drive.google.com/file/d/1NqWChl3g4YBFLxi7wFLIYyubezolfdBE/view?usp=drive_link';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveAudioUrl(submoduleId_3_2, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed audio database for ${submoduleId_3_2}:`, error);
+        } finally {
+          localStorage.setItem(audioSeedFlag_3_2, 'true');
         }
       }
     };

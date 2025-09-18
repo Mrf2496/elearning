@@ -63,7 +63,7 @@ const SubmoduleContent: React.FC<SubmoduleContentProps> = ({ submodule, audioUrl
           <MediaViewer type="audio" currentUrl={audioUrl} />
         </div>
         <div className="pt-4 first:pt-0">
-          <h4 className="font-semibold text-orange-600">Concepto de Video/Animación: "{submodule.multimedia.videoConcept.title}"</h4>
+          <h4 className="font-semibold text-orange-600">{submodule.multimedia.videoConcept.title}</h4>
           <p className="text-sm text-gray-600">{submodule.multimedia.videoConcept.script}</p>
           <MediaViewer type="video" currentUrl={videoUrl} />
         </div>
