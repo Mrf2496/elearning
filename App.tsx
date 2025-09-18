@@ -197,6 +197,23 @@ export default function App() {
           localStorage.setItem(audioSeedFlag_3_3, 'true');
         }
       }
+
+      // --- Submodule 4-1 ---
+      const submoduleId_4_1 = '4-1';
+      const audioSeedFlag_4_1 = `seeded_audio_preview_v2_${submoduleId_4_1}`;
+      if (!localStorage.getItem(audioSeedFlag_4_1)) {
+         try {
+          const rawUrl = 'https://drive.google.com/file/d/16vz5FnJUIDPCPLFNfs4aJfGS3ETv211T/view?usp=drive_link';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveAudioUrl(submoduleId_4_1, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed audio database for ${submoduleId_4_1}:`, error);
+        } finally {
+          localStorage.setItem(audioSeedFlag_4_1, 'true');
+        }
+      }
     };
 
     seedSubmoduleMedia();
