@@ -129,6 +129,23 @@ export default function App() {
 
       // --- Submodule 2-1 ---
       const submoduleId_2_1 = '2-1';
+      
+      // Seed Video for 2-1
+      const videoSeedFlag_2_1 = `seeded_video_preview_v6_${submoduleId_2_1}`;
+      if (!localStorage.getItem(videoSeedFlag_2_1)) {
+        try {
+          const rawUrl = 'https://www.youtube.com/watch?v=JMf38t2N33w';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveVideoUrl(submoduleId_2_1, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed video database for ${submoduleId_2_1}:`, error);
+        } finally {
+          localStorage.setItem(videoSeedFlag_2_1, 'true');
+        }
+      }
+      
       const audioSeedFlag_2_1 = `seeded_audio_preview_v6_${submoduleId_2_1}`;
       if (!localStorage.getItem(audioSeedFlag_2_1)) {
          try {
