@@ -1,3 +1,4 @@
+
 export const getEmbedUrl = (url: string): string | null => {
   if (!url) return null;
 
@@ -13,12 +14,14 @@ export const getEmbedUrl = (url: string): string | null => {
         videoId = urlObject.searchParams.get('v');
       } else if (urlObject.pathname.startsWith('/embed/')) {
         videoId = urlObject.pathname.substring('/embed/'.length);
+      } else if (urlObject.pathname.startsWith('/shorts/')) {
+        videoId = urlObject.pathname.substring('/shorts/'.length);
       }
       
       if (videoId) {
         // Validate videoId format
         if (/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-          return `https://www.youtube.com/embed/${videoId}`;
+          return `https://www.youtube.com/embed/${videoId}?rel=0`;
         }
       }
     }
