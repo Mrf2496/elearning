@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { View } from './types';
 import { courseData } from './constants/courseData';
@@ -27,10 +26,10 @@ export default function App() {
       const submoduleId_1_1 = '1-1';
       
       // Seed Video for 1-1
-      const videoSeedFlag_1_1 = `seeded_video_preview_v4_${submoduleId_1_1}`;
+      const videoSeedFlag_1_1 = `seeded_video_preview_v6_${submoduleId_1_1}`;
       if (!localStorage.getItem(videoSeedFlag_1_1)) {
         try {
-          const rawUrl = 'https://youtube.com/shorts/mueVhG5xRtY?feature=share';
+          const rawUrl = 'https://youtu.be/AMxkW8JEUs0';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
             await saveVideoUrl(submoduleId_1_1, embedUrl);
@@ -43,7 +42,7 @@ export default function App() {
       }
 
       // Seed Audio for 1-1
-      const audioSeedFlag_1_1 = `seeded_audio_preview_v4_${submoduleId_1_1}`;
+      const audioSeedFlag_1_1 = `seeded_audio_preview_v6_${submoduleId_1_1}`;
       if (!localStorage.getItem(audioSeedFlag_1_1)) {
          try {
           const rawUrl = 'https://drive.google.com/file/d/1SKXmmMwUeFblQCODQPtvuV8_UFgABMEc/view?usp=drive_link';
@@ -58,11 +57,27 @@ export default function App() {
         }
       }
       
-      // --- Submodule 1-2 --- (User's request)
+      // --- Submodule 1-2 ---
       const submoduleId_1_2 = '1-2';
 
+      // Seed Video for 1-2
+      const videoSeedFlag_1_2 = `seeded_video_preview_v6_${submoduleId_1_2}`;
+      if (!localStorage.getItem(videoSeedFlag_1_2)) {
+        try {
+          const rawUrl = 'https://youtu.be/IqwTzGkwI0k';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveVideoUrl(submoduleId_1_2, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed video database for ${submoduleId_1_2}:`, error);
+        } finally {
+          localStorage.setItem(videoSeedFlag_1_2, 'true');
+        }
+      }
+
       // Seed Audio for 1-2
-      const audioSeedFlag_1_2 = `seeded_audio_preview_v4_${submoduleId_1_2}`;
+      const audioSeedFlag_1_2 = `seeded_audio_preview_v6_${submoduleId_1_2}`;
       if (!localStorage.getItem(audioSeedFlag_1_2)) {
          try {
           const rawUrl = 'https://drive.google.com/file/d/1ATYc37TjZB_F9ZVOOcV_l40JhBP6w22d/view?usp=drive_link';
@@ -80,8 +95,24 @@ export default function App() {
       // --- Submodule 1-3 --- (User's request)
       const submoduleId_1_3 = '1-3';
 
+      // Seed Video for 1-3
+      const videoSeedFlag_1_3 = `seeded_video_preview_v6_${submoduleId_1_3}`;
+      if (!localStorage.getItem(videoSeedFlag_1_3)) {
+        try {
+          const rawUrl = 'https://youtu.be/LsGZrjfRklI';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveVideoUrl(submoduleId_1_3, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed video database for ${submoduleId_1_3}:`, error);
+        } finally {
+          localStorage.setItem(videoSeedFlag_1_3, 'true');
+        }
+      }
+
       // Seed Audio for 1-3
-      const audioSeedFlag_1_3 = `seeded_audio_preview_v4_${submoduleId_1_3}`;
+      const audioSeedFlag_1_3 = `seeded_audio_preview_v6_${submoduleId_1_3}`;
       if (!localStorage.getItem(audioSeedFlag_1_3)) {
          try {
           const rawUrl = 'https://drive.google.com/file/d/1A_mEIhQLEcbiGqNq7Bn-0AJmxAzwgh3h/view?usp=drive_link';
@@ -98,7 +129,7 @@ export default function App() {
 
       // --- Submodule 2-1 ---
       const submoduleId_2_1 = '2-1';
-      const audioSeedFlag_2_1 = `seeded_audio_preview_v4_${submoduleId_2_1}`;
+      const audioSeedFlag_2_1 = `seeded_audio_preview_v6_${submoduleId_2_1}`;
       if (!localStorage.getItem(audioSeedFlag_2_1)) {
          try {
           const rawUrl = 'https://drive.google.com/file/d/1SKXmmMwUeFblQCODQPtvuV8_UFgABMEc/view?usp=drive_link';
@@ -115,7 +146,7 @@ export default function App() {
 
       // --- Submodule 2-2 ---
       const submoduleId_2_2 = '2-2';
-      const audioSeedFlag_2_2 = `seeded_audio_preview_v4_${submoduleId_2_2}`;
+      const audioSeedFlag_2_2 = `seeded_audio_preview_v6_${submoduleId_2_2}`;
       if (!localStorage.getItem(audioSeedFlag_2_2)) {
          try {
           const rawUrl = 'https://drive.google.com/file/d/1XlHvsAVzeJTcjbFdDQcrlpLOWWLmgKkS/view?usp=drive_link';
@@ -132,7 +163,7 @@ export default function App() {
 
       // --- Submodule 2-3 ---
       const submoduleId_2_3 = '2-3';
-      const audioSeedFlag_2_3 = `seeded_audio_preview_v4_${submoduleId_2_3}`;
+      const audioSeedFlag_2_3 = `seeded_audio_preview_v6_${submoduleId_2_3}`;
       if (!localStorage.getItem(audioSeedFlag_2_3)) {
          try {
           const rawUrl = 'https://drive.google.com/file/d/1-daYLdD0iKoBVfYS3o8BcAxXE5br7J05/view?usp=drive_link';
@@ -149,7 +180,7 @@ export default function App() {
 
       // --- Submodule 3-1 ---
       const submoduleId_3_1 = '3-1';
-      const audioSeedFlag_3_1 = `seeded_audio_preview_v4_${submoduleId_3_1}`;
+      const audioSeedFlag_3_1 = `seeded_audio_preview_v6_${submoduleId_3_1}`;
       if (!localStorage.getItem(audioSeedFlag_3_1)) {
          try {
           const rawUrl = 'https://drive.google.com/file/d/1ffmhAPnh-eI2vxVD68jfnj8Ji14WZ0eE/view?usp=drive_link';
@@ -166,7 +197,7 @@ export default function App() {
 
       // --- Submodule 3-2 ---
       const submoduleId_3_2 = '3-2';
-      const audioSeedFlag_3_2 = `seeded_audio_preview_v4_${submoduleId_3_2}`;
+      const audioSeedFlag_3_2 = `seeded_audio_preview_v6_${submoduleId_3_2}`;
       if (!localStorage.getItem(audioSeedFlag_3_2)) {
          try {
           const rawUrl = 'https://drive.google.com/file/d/1NqWChl3g4YBFLxi7wFLIYyubezolfdBE/view?usp=drive_link';
@@ -183,7 +214,7 @@ export default function App() {
 
       // --- Submodule 3-3 ---
       const submoduleId_3_3 = '3-3';
-      const audioSeedFlag_3_3 = `seeded_audio_preview_v4_${submoduleId_3_3}`;
+      const audioSeedFlag_3_3 = `seeded_audio_preview_v6_${submoduleId_3_3}`;
       if (!localStorage.getItem(audioSeedFlag_3_3)) {
          try {
           const rawUrl = 'https://drive.google.com/file/d/1iHgfncK7Ta3sWg0Zkdon9_3MKJ72uk0J/view?usp=drive_link';
@@ -200,7 +231,7 @@ export default function App() {
 
       // --- Submodule 4-1 ---
       const submoduleId_4_1 = '4-1';
-      const audioSeedFlag_4_1 = `seeded_audio_preview_v4_${submoduleId_4_1}`;
+      const audioSeedFlag_4_1 = `seeded_audio_preview_v6_${submoduleId_4_1}`;
       if (!localStorage.getItem(audioSeedFlag_4_1)) {
          try {
           const rawUrl = 'https://drive.google.com/file/d/16vz5FnJUIDPCPLFNfs4aJfGS3ETv211T/view?usp=drive_link';
