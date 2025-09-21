@@ -197,6 +197,23 @@ export default function App() {
 
       // --- Submodule 2-3 ---
       const submoduleId_2_3 = '2-3';
+      
+      // Seed Video for 2-3
+      const videoSeedFlag_2_3 = `seeded_video_preview_v6_${submoduleId_2_3}`;
+      if (!localStorage.getItem(videoSeedFlag_2_3)) {
+        try {
+          const rawUrl = 'https://youtu.be/142l4LB4Qvk';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveVideoUrl(submoduleId_2_3, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed video database for ${submoduleId_2_3}:`, error);
+        } finally {
+          localStorage.setItem(videoSeedFlag_2_3, 'true');
+        }
+      }
+
       const audioSeedFlag_2_3 = `seeded_audio_preview_v6_${submoduleId_2_3}`;
       if (!localStorage.getItem(audioSeedFlag_2_3)) {
          try {
