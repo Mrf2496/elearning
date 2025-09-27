@@ -69,18 +69,21 @@ export const useCourseProgress = () => {
   }, []);
 
   const isModuleCompleted = useCallback((moduleId: number): boolean => {
+    const isAlreadyMarkedComplete = completedModules.has(moduleId);
+    if(isAlreadyMarkedComplete) return true;
+
     const module = courseData.modules.find(m => m.id === moduleId);
-    if (!module || module.submodules.length === 0) return completedModules.has(moduleId);
+    if(moduleId === 11) return isAlreadyMarkedComplete; // Case studies are handled differently
+    if (!module || module.submodules.length === 0) return isAlreadyMarkedComplete;
     
     const allSubmodulesCompleted = module.submodules.every(sm => completedSubmodules.has(sm.id));
-    if (allSubmodulesCompleted && !completedModules.has(moduleId)) {
+    if (allSubmodulesCompleted && !isAlreadyMarkedComplete) {
       completeModule(moduleId);
     }
     return allSubmodulesCompleted;
   }, [completedSubmodules, completedModules, completeModule]);
 
   const getCourseProgress = useCallback((): number => {
-    const totalCompletableItems = courseData.modules.length + 1; // Modules + Case Studies
     let completedCount = 0;
     
     courseData.modules.forEach(m => {
@@ -90,9 +93,25 @@ export const useCourseProgress = () => {
     if (completedModules.has(11)) { // Special ID for case studies
         completedCount++;
     }
+    const totalCompletableItems = courseData.modules.length + 1; // Modules + Case Studies
 
     return (completedCount / totalCompletableItems) * 100;
   }, [isModuleCompleted, completedModules]);
+
+  const getModuleProgress = useCallback((moduleId: number): number => {
+    if (moduleId === 11) { // Special case for Case Studies
+        return completedModules.has(11) ? 100 : 0;
+    }
+    const module = courseData.modules.find(m => m.id === moduleId);
+    if (!module || module.submodules.length === 0) {
+        return completedModules.has(moduleId) ? 100 : 0;
+    }
+    
+    const completedInModule = module.submodules.filter(sm => completedSubmodules.has(sm.id)).length;
+    const totalInModule = module.submodules.length;
+    
+    return totalInModule > 0 ? (completedInModule / totalInModule) * 100 : 0;
+  }, [completedSubmodules, completedModules]);
 
 
   return { 
@@ -104,5 +123,6 @@ export const useCourseProgress = () => {
       setQuizPassed,
       isModuleCompleted,
       getCourseProgress,
+      getModuleProgress,
     };
 };

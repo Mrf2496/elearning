@@ -661,10 +661,10 @@ export default function App() {
 
 
   const handleSelectModule = (moduleId: number) => {
+    setSelectedModuleId(moduleId);
     if (moduleId === 11) {
       setCurrentView(View.CaseStudies);
     } else {
-      setSelectedModuleId(moduleId);
       setCurrentView(View.Module);
     }
   };
@@ -723,10 +723,10 @@ export default function App() {
 
   return (
     <CourseProgressContext.Provider value={progressHook}>
-      <div className="min-h-screen bg-gray-100 flex flex-col">
+      <div className="min-h-screen bg-slate-50 flex flex-col">
         <Header />
         <div className="flex flex-1 overflow-hidden">
-          <Sidebar onNavigate={handleNavigate} />
+          <Sidebar onNavigate={handleNavigate} onSelectModule={handleSelectModule} />
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
             {renderContent()}
           </main>

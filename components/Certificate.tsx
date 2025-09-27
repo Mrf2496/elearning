@@ -31,7 +31,7 @@ const Certificate: React.FC = () => {
       return (
           <Card className="text-center border-t-8 border-red-600">
               <h2 className="text-2xl font-bold text-red-700">Acceso Denegado</h2>
-              <p className="mt-4 text-gray-700">Debes aprobar la evaluación final con un puntaje de 90% o más para poder generar tu certificado.</p>
+              <p className="mt-4 text-gray-700">Debes aprobar la evaluación final con un puntaje de 80% o más para poder generar tu certificado.</p>
           </Card>
       );
   }

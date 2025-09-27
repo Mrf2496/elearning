@@ -21,6 +21,8 @@ interface ModuleViewProps {
   isLastModule: boolean;
 }
 
+const MIN_SUBMODULE_VIEW_TIME_SECONDS = 15;
+
 const ModuleView: React.FC<ModuleViewProps> = ({ 
   module, 
   onModuleComplete,
@@ -34,13 +36,9 @@ const ModuleView: React.FC<ModuleViewProps> = ({
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({});
   const [videoUrls, setVideoUrls] = useState<Record<string, string>>({});
   const progressContext = useContext(CourseProgressContext);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (audioRef.current && !audioRef.current.paused) {
-      audioRef.current.pause();
-    }
-
     setSelectedSubmoduleId(module.submodules[0]?.id || null);
     window.scrollTo(0, 0);
 
@@ -66,21 +64,46 @@ const ModuleView: React.FC<ModuleViewProps> = ({
     };
 
     loadMediaFromDB();
-
-    return () => {};
   }, [module]);
+
+  const { completedSubmodules, completeSubmodule, isModuleCompleted } = progressContext || {};
+
+  useEffect(() => {
+    // Clear any existing timer when submodule changes
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    if (selectedSubmoduleId && !completedSubmodules?.has(selectedSubmoduleId) && completeSubmodule) {
+      let timeElapsed = 0;
+
+      timerRef.current = window.setInterval(() => {
+        timeElapsed += 1;
+        if (timeElapsed >= MIN_SUBMODULE_VIEW_TIME_SECONDS) {
+          completeSubmodule(selectedSubmoduleId);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+        }
+      }, 1000);
+    }
+
+    // Cleanup function
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [selectedSubmoduleId, completedSubmodules, completeSubmodule]);
 
   if (!progressContext) return null;
 
-  const { completedSubmodules, completeSubmodule, isModuleCompleted } = progressContext;
 
   const handleSelectSubmodule = (submoduleId: string) => {
     setSelectedSubmoduleId(submoduleId);
-    completeSubmodule(submoduleId);
-    
-    if (audioRef.current) {
-        audioRef.current.pause();
-    }
   };
   
   const selectedSubmodule = module.submodules.find(sm => sm.id === selectedSubmoduleId);
@@ -88,11 +111,9 @@ const ModuleView: React.FC<ModuleViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <audio ref={audioRef} />
-      
-      <Card className={`border-l-4 ${isEven ? 'border-blue-500' : 'border-orange-500'}`}>
-        <h2 className="text-3xl font-bold text-gray-800">{module.title}</h2>
-        <p className="mt-2 text-lg text-gray-600">{module.description}</p>
+      <Card className={`border-l-4 ${isEven ? 'border-sky-500' : 'border-orange-500'}`}>
+        <h2 className="text-3xl font-bold text-slate-800">{module.title}</h2>
+        <p className="mt-2 text-lg text-slate-600">{module.description}</p>
         {isModuleCompleted(module.id) && (
             <div className="mt-4 flex items-center text-green-600 font-semibold">
                 <CheckCircleIcon className="w-6 h-6 mr-2" />
@@ -112,8 +133,8 @@ const ModuleView: React.FC<ModuleViewProps> = ({
                     onClick={() => handleSelectSubmodule(submodule.id)}
                     className={`w-full text-left p-3 rounded-lg flex items-center justify-between transition-colors ${
                       selectedSubmoduleId === submodule.id
-                        ? (isEven ? 'bg-blue-100 font-semibold text-blue-700' : 'bg-orange-100 font-semibold text-orange-700')
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? (isEven ? 'bg-sky-100 font-semibold text-sky-700' : 'bg-orange-100 font-semibold text-orange-700')
+                        : 'text-slate-700 hover:bg-slate-100'
                     }`}
                   >
                     <span>{submodule.title}</span>

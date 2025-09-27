@@ -32,7 +32,7 @@ const FinalQuiz: React.FC = () => {
   const handleSubmit = () => {
     setShowResults(true);
     const score = calculateScore();
-    if(score >= 90) {
+    if(score >= 80) {
         progressContext?.setQuizPassed(true);
     }
   };
@@ -44,7 +44,7 @@ const FinalQuiz: React.FC = () => {
 
   if (showResults) {
     const score = calculateScore();
-    const passed = score >= 90;
+    const passed = score >= 80;
     return (
       <Card className="text-center">
         <h2 className="text-3xl font-bold mb-4">Resultados de la Evaluación</h2>
@@ -59,7 +59,7 @@ const FinalQuiz: React.FC = () => {
           </div>
         ) : (
           <div>
-            <p className="text-xl text-red-700 font-semibold">Lo sentimos, no has alcanzado el 90% requerido para aprobar.</p>
+            <p className="text-xl text-red-700 font-semibold">Lo sentimos, no has alcanzado el 80% requerido para aprobar.</p>
             <p className="mt-2 text-gray-600">Te recomendamos repasar los módulos y volver a intentarlo.</p>
             <Button onClick={() => window.location.reload()} className="mt-6">Reintentar Evaluación</Button>
           </div>
@@ -72,9 +72,9 @@ const FinalQuiz: React.FC = () => {
 
   return (
     <div className="space-y-6">
-       <Card className="border-l-4 border-blue-500">
+       <Card className="border-l-4 border-sky-500">
         <h2 className="text-3xl font-bold text-gray-800">Evaluación Final</h2>
-        <p className="mt-2 text-lg text-gray-600">Demuestra tus conocimientos sobre SARLAFT. Necesitas un 90% para aprobar.</p>
+        <p className="mt-2 text-lg text-gray-600">Demuestra tus conocimientos sobre SARLAFT. Necesitas un 80% para aprobar.</p>
       </Card>
       <Card>
         <ProgressBar progress={((currentQuestionIndex + 1) / courseData.finalQuiz.length) * 100} className="mb-6"/>
@@ -87,7 +87,7 @@ const FinalQuiz: React.FC = () => {
               onClick={() => handleAnswer(index)}
               className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${
                 answers[currentQuestionIndex] === index
-                  ? 'bg-blue-100 border-blue-500 ring-2 ring-blue-300 text-blue-800 font-semibold'
+                  ? 'bg-sky-100 border-sky-500 ring-2 ring-sky-300 text-sky-800 font-semibold'
                   : 'bg-white hover:bg-gray-100 border-gray-300 text-gray-800'
               }`}
             >

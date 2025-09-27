@@ -10,6 +10,7 @@ interface CourseProgressContextType {
   setQuizPassed: (passed: boolean) => void;
   isModuleCompleted: (moduleId: number) => boolean;
   getCourseProgress: () => number;
+  getModuleProgress: (moduleId: number) => number;
 }
 
 export const CourseProgressContext = createContext<CourseProgressContextType | undefined>(undefined);
