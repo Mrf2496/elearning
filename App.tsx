@@ -433,6 +433,74 @@ export default function App() {
           localStorage.setItem(audioSeedFlag_6_2, 'true');
         }
       }
+
+      // --- Submodule 6-3 ---
+      const submoduleId_6_3 = '6-3';
+      const audioSeedFlag_6_3 = `seeded_audio_preview_v6_${submoduleId_6_3}`;
+      if (!localStorage.getItem(audioSeedFlag_6_3)) {
+         try {
+          const rawUrl = 'https://drive.google.com/file/d/1Rq5rPXHK73WsWbWjnP8tq5WwvLGdd_WD/view?usp=drive_link';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveAudioUrl(submoduleId_6_3, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed audio database for ${submoduleId_6_3}:`, error);
+        } finally {
+          localStorage.setItem(audioSeedFlag_6_3, 'true');
+        }
+      }
+
+      // --- Submodule 7-1 ---
+      const submoduleId_7_1 = '7-1';
+      const audioSeedFlag_7_1 = `seeded_audio_preview_v6_${submoduleId_7_1}`;
+      if (!localStorage.getItem(audioSeedFlag_7_1)) {
+         try {
+          const rawUrl = 'https://drive.google.com/file/d/1_M8FwRPPX3lHN41QCLKNvW_Is8k6G2Av/view?usp=drive_link';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveAudioUrl(submoduleId_7_1, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed audio database for ${submoduleId_7_1}:`, error);
+        } finally {
+          localStorage.setItem(audioSeedFlag_7_1, 'true');
+        }
+      }
+      
+      // --- Submodule 7-2 ---
+      const submoduleId_7_2 = '7-2';
+      const audioSeedFlag_7_2 = `seeded_audio_preview_v6_${submoduleId_7_2}`;
+      if (!localStorage.getItem(audioSeedFlag_7_2)) {
+         try {
+          const rawUrl = 'https://drive.google.com/file/d/1Ff-RaR0SgQw2gdVtkFkdClxmGuvdThvz/view?usp=drive_link';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveAudioUrl(submoduleId_7_2, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed audio database for ${submoduleId_7_2}:`, error);
+        } finally {
+          localStorage.setItem(audioSeedFlag_7_2, 'true');
+        }
+      }
+
+      // --- Submodule 7-3 ---
+      const submoduleId_7_3 = '7-3';
+      const audioSeedFlag_7_3 = `seeded_audio_preview_v6_${submoduleId_7_3}`;
+      if (!localStorage.getItem(audioSeedFlag_7_3)) {
+         try {
+          const rawUrl = 'https://drive.google.com/file/d/14186PqZlwVsa4_3uNeFzipEmwagVMU78/view?usp=drive_link';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveAudioUrl(submoduleId_7_3, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed audio database for ${submoduleId_7_3}:`, error);
+        } finally {
+          localStorage.setItem(audioSeedFlag_7_3, 'true');
+        }
+      }
     };
 
     seedSubmoduleMedia();
