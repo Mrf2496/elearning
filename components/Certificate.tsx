@@ -72,7 +72,6 @@ const Certificate: React.FC = () => {
     });
   };
   
-  /*
   if (!progressContext?.quizPassed) {
       return (
           <Card className="text-center border-t-8 border-red-600">
@@ -81,7 +80,6 @@ const Certificate: React.FC = () => {
           </Card>
       );
   }
-  */
 
   if (isGenerated) {
     return (

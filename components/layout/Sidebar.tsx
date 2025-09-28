@@ -50,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onSelectModule }) => {
             const progress = isModuleOrCases ? getModuleProgress(item.id) : 0;
             const isCompleted = isModuleOrCases ? isModuleCompleted(item.id) : false;
 
-            const isLocked = (isQuiz && !allModulesAndCasesCompleted); // || (isCert && !quizPassed); // Temporarily disabled for testing
+            const isLocked = (isQuiz && !allModulesAndCasesCompleted) || (isCert && !quizPassed);
 
             return (
               <li key={item.id} className="mb-1">
