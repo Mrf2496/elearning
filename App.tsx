@@ -586,6 +586,21 @@ export default function App() {
       
       // --- Submodule 8-1 ---
       const submoduleId_8_1 = '8-1';
+      // Seed Video for 8-1
+      const videoSeedFlag_8_1 = `seeded_video_preview_v6_${submoduleId_8_1}`;
+      if (!localStorage.getItem(videoSeedFlag_8_1)) {
+        try {
+          const rawUrl = 'https://youtu.be/qmKihXWchb8';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveVideoUrl(submoduleId_8_1, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed video database for ${submoduleId_8_1}:`, error);
+        } finally {
+          localStorage.setItem(videoSeedFlag_8_1, 'true');
+        }
+      }
       const audioSeedFlag_8_1 = `seeded_audio_preview_v6_${submoduleId_8_1}`;
       if (!localStorage.getItem(audioSeedFlag_8_1)) {
          try {
@@ -637,6 +652,21 @@ export default function App() {
 
       // --- Submodule 9-1 ---
       const submoduleId_9_1 = '9-1';
+      // Seed Video for 9-1
+      const videoSeedFlag_9_1 = `seeded_video_preview_v6_${submoduleId_9_1}`;
+      if (!localStorage.getItem(videoSeedFlag_9_1)) {
+        try {
+          const rawUrl = 'https://youtu.be/Pi8ab-yB7IA';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveVideoUrl(submoduleId_9_1, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed video database for ${submoduleId_9_1}:`, error);
+        } finally {
+          localStorage.setItem(videoSeedFlag_9_1, 'true');
+        }
+      }
       const audioSeedFlag_9_1 = `seeded_audio_preview_v6_${submoduleId_9_1}`;
       if (!localStorage.getItem(audioSeedFlag_9_1)) {
          try {
