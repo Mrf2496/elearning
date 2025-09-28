@@ -29,6 +29,7 @@ const Certificate: React.FC = () => {
     window.print();
   };
   
+  /*
   if (!progressContext?.quizPassed) {
       return (
           <Card className="text-center border-t-8 border-red-600">
@@ -37,6 +38,7 @@ const Certificate: React.FC = () => {
           </Card>
       );
   }
+  */
 
   if (isGenerated) {
     return (
@@ -44,8 +46,8 @@ const Certificate: React.FC = () => {
         <div id="certificate-print-area" className="p-4 sm:p-8 bg-white border-8 border-blue-800 rounded-lg shadow-2xl relative w-full aspect-[1.414]">
             <div className="absolute inset-0 bg-gray-50 opacity-10" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23a0aec0\' fill-opacity=\'0.1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'}}></div>
             <div className="text-center relative">
-              <p className="text-2xl font-bold text-slate-700 tracking-widest">{companyName.toUpperCase()}</p>
-              <h1 className="text-4xl sm:text-5xl font-bold text-blue-800 mt-6">Certificado de Finalización</h1>
+              <p className="text-4xl sm:text-5xl font-bold text-blue-800 tracking-widest">{companyName.toUpperCase()}</p>
+              <h1 className="text-2xl font-bold text-slate-700 mt-6">Certificado de Finalización</h1>
               <p className="mt-8 text-xl text-gray-700">Se certifica a:</p>
               <p className="text-3xl font-serif text-blue-900 mt-4 underline underline-offset-8 decoration-orange-400 decoration-4">{name}</p>
               <p className="mt-2 text-lg text-gray-700">con cédula de ciudadanía No. {idNumber}</p>

@@ -1,4 +1,5 @@
 
+
 import React, { useContext } from 'react';
 import { View } from '../../types';
 import { CourseProgressContext } from '../../context/CourseProgressContext';
@@ -49,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onSelectModule }) => {
             const progress = isModuleOrCases ? getModuleProgress(item.id) : 0;
             const isCompleted = isModuleOrCases ? isModuleCompleted(item.id) : false;
 
-            const isLocked = (isQuiz && !allModulesAndCasesCompleted) || (isCert && !quizPassed);
+            const isLocked = (isQuiz && !allModulesAndCasesCompleted); // || (isCert && !quizPassed); // Temporarily disabled for testing
 
             return (
               <li key={item.id} className="mb-1">
