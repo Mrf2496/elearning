@@ -232,6 +232,23 @@ export default function App() {
 
       // --- Submodule 3-1 ---
       const submoduleId_3_1 = '3-1';
+      
+      // Seed Video for 3-1
+      const videoSeedFlag_3_1 = `seeded_video_preview_v6_${submoduleId_3_1}`;
+      if (!localStorage.getItem(videoSeedFlag_3_1)) {
+        try {
+          const rawUrl = 'https://youtu.be/-COAYNoCODo';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveVideoUrl(submoduleId_3_1, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed video database for ${submoduleId_3_1}:`, error);
+        } finally {
+          localStorage.setItem(videoSeedFlag_3_1, 'true');
+        }
+      }
+
       const audioSeedFlag_3_1 = `seeded_audio_preview_v6_${submoduleId_3_1}`;
       if (!localStorage.getItem(audioSeedFlag_3_1)) {
          try {
@@ -283,6 +300,22 @@ export default function App() {
 
       // --- Submodule 4-1 ---
       const submoduleId_4_1 = '4-1';
+      
+      const videoSeedFlag_4_1 = `seeded_video_preview_v6_${submoduleId_4_1}`;
+      if (!localStorage.getItem(videoSeedFlag_4_1)) {
+        try {
+          const rawUrl = 'https://youtu.be/UaNFEck4Fpg';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveVideoUrl(submoduleId_4_1, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed video database for ${submoduleId_4_1}:`, error);
+        } finally {
+          localStorage.setItem(videoSeedFlag_4_1, 'true');
+        }
+      }
+      
       const audioSeedFlag_4_1 = `seeded_audio_preview_v6_${submoduleId_4_1}`;
       if (!localStorage.getItem(audioSeedFlag_4_1)) {
          try {
@@ -334,6 +367,23 @@ export default function App() {
 
       // --- Submodule 5-1 ---
       const submoduleId_5_1 = '5-1';
+      
+      // Seed Video for 5-1
+      const videoSeedFlag_5_1 = `seeded_video_preview_v6_${submoduleId_5_1}`;
+      if (!localStorage.getItem(videoSeedFlag_5_1)) {
+        try {
+          const rawUrl = 'https://youtu.be/v9t5uYyqJ_I';
+          const embedUrl = getEmbedUrl(rawUrl);
+          if (embedUrl) {
+            await saveVideoUrl(submoduleId_5_1, embedUrl);
+          }
+        } catch (error) {
+          console.error(`Failed to seed video database for ${submoduleId_5_1}:`, error);
+        } finally {
+          localStorage.setItem(videoSeedFlag_5_1, 'true');
+        }
+      }
+      
       const audioSeedFlag_5_1 = `seeded_audio_preview_v6_${submoduleId_5_1}`;
       if (!localStorage.getItem(audioSeedFlag_5_1)) {
          try {
