@@ -7,6 +7,7 @@ const Certificate: React.FC = () => {
   const [name, setName] = useState('');
   const [idNumber, setIdNumber] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [complianceOfficerName, setComplianceOfficerName] = useState('');
   const [isGenerated, setIsGenerated] = useState(false);
   const progressContext = useContext(CourseProgressContext);
   
@@ -17,10 +18,10 @@ const Certificate: React.FC = () => {
   });
 
   const handleGenerate = () => {
-    if (name.trim() && idNumber.trim() && companyName.trim()) {
+    if (name.trim() && idNumber.trim() && companyName.trim() && complianceOfficerName.trim()) {
       setIsGenerated(true);
     } else {
-      alert('Por favor, ingresa tu nombre completo, número de identificación y el nombre de la empresa.');
+      alert('Por favor, ingresa todos los datos: nombre completo, identificación, nombre de la empresa y nombre del oficial de cumplimiento.');
     }
   };
 
@@ -63,6 +64,7 @@ const Certificate: React.FC = () => {
               <div className="mt-12 flex justify-center items-end">
                 <div>
                   <div className="border-t-2 border-gray-600 w-64 mx-auto pt-2">
+                    <p className="text-lg font-medium">{complianceOfficerName}</p>
                     <p className="text-sm font-semibold">Oficial de Cumplimiento</p>
                   </div>
                 </div>
@@ -115,6 +117,17 @@ const Certificate: React.FC = () => {
             onChange={(e) => setCompanyName(e.target.value)}
             className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             placeholder="Ej: Mi Cooperativa SAS"
+          />
+        </div>
+        <div>
+          <label htmlFor="complianceOfficerName" className="block text-sm font-medium text-gray-700">Nombre del Oficial de Cumplimiento</label>
+          <input
+            type="text"
+            id="complianceOfficerName"
+            value={complianceOfficerName}
+            onChange={(e) => setComplianceOfficerName(e.target.value)}
+            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+            placeholder="Ej: Carlos Rodriguez"
           />
         </div>
         <div className="pt-2">
