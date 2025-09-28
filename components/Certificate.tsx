@@ -3,12 +3,21 @@ import Card from './common/Card';
 import Button from './common/Button';
 import { CourseProgressContext } from '../context/CourseProgressContext';
 
+// Declarar las librerías globales que se cargan desde el CDN
+declare global {
+  interface Window {
+    jspdf: any;
+    html2canvas: any;
+  }
+}
+
 const Certificate: React.FC = () => {
   const [name, setName] = useState('');
   const [idNumber, setIdNumber] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [complianceOfficerName, setComplianceOfficerName] = useState('');
   const [isGenerated, setIsGenerated] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const progressContext = useContext(CourseProgressContext);
   
   const completionDate = new Date().toLocaleDateString('es-CO', {
@@ -25,8 +34,42 @@ const Certificate: React.FC = () => {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleGeneratePDF = () => {
+    const certificateElement = document.getElementById('certificate-print-area');
+    if (!certificateElement) {
+      console.error("No se encontró el elemento del certificado para generar el PDF.");
+      alert("Error: No se pudo encontrar el área del certificado.");
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+
+    window.html2canvas(certificateElement, {
+      scale: 2, // Aumenta la escala para una mejor resolución del PDF
+      useCORS: true,
+      logging: false,
+    }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf;
+      
+      // Dimensiones de A4 en orientación apaisada (landscape): 297mm de ancho x 210mm de alto
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Certificado-SARLAFT-${name.trim().replace(/\s+/g, '_')}.pdf`);
+    }).catch(err => {
+      console.error("Error al generar el PDF:", err);
+      alert("Ocurrió un error inesperado al generar el PDF. Por favor, inténtelo de nuevo.");
+    }).finally(() => {
+      setIsGeneratingPDF(false);
+    });
   };
   
   /*
@@ -73,9 +116,11 @@ const Certificate: React.FC = () => {
               </div>
             </div>
         </div>
-        <div className="mt-6 text-center space-x-4">
-            <Button onClick={() => setIsGenerated(false)} variant="secondary">Editar Datos</Button>
-            <Button onClick={handlePrint}>Imprimir o Guardar como PDF</Button>
+        <div className="mt-6 text-center space-x-4 no-print">
+            <Button onClick={() => setIsGenerated(false)} variant="secondary" disabled={isGeneratingPDF}>Editar Datos</Button>
+            <Button onClick={handleGeneratePDF} disabled={isGeneratingPDF}>
+                {isGeneratingPDF ? 'Generando PDF...' : 'Descargar Certificado en PDF'}
+            </Button>
         </div>
       </div>
     );
@@ -84,6 +129,10 @@ const Certificate: React.FC = () => {
   return (
     <Card>
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Generar Certificado</h2>
+      <div className="bg-sky-50 border-l-4 border-sky-500 text-sky-800 p-4 mb-6 rounded-r-lg" role="alert">
+        <p className="font-bold">¡Importante!</p>
+        <p>Para descargar el certificado en PDF, primero completa todos los campos y haz clic en "Generar mi Certificado". La opción para descargar aparecerá junto con la vista previa del certificado.</p>
+      </div>
       <p className="text-gray-600 mb-6">
         Ingresa tus datos como aparecerán en el certificado. Asegúrate de que sean correctos.
       </p>

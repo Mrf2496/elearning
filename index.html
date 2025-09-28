@@ -21,6 +21,9 @@
           print-color-adjust: exact;
           margin: 0;
         }
+        .no-print {
+          display: none !important;
+        }
         body * {
           visibility: hidden;
         }
@@ -54,5 +57,7 @@
 </head>
   <body class="bg-slate-50 text-slate-800 antialiased">
     <div id="root"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   </body>
 </html>
