@@ -69,7 +69,8 @@ const Certificate: React.FC = () => {
               </div>
             </div>
         </div>
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-x-4">
+            <Button onClick={() => setIsGenerated(false)} variant="secondary">Editar Datos</Button>
             <Button onClick={handlePrint}>Imprimir o Guardar como PDF</Button>
         </div>
       </div>
