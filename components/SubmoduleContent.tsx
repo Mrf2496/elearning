@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Submodule } from '../types';
 import Card from './common/Card';
 
@@ -51,23 +51,63 @@ const MediaViewer: React.FC<{
 
 
 const SubmoduleContent: React.FC<SubmoduleContentProps> = ({ submodule, audioUrl, videoUrl }) => {
+  const [activeTab, setActiveTab] = useState<'definition' | 'audio' | 'video'>('definition');
+
+  // Reset to definition tab when submodule changes
+  useEffect(() => {
+    setActiveTab('definition');
+  }, [submodule]);
+
+  const tabs = [
+    { id: 'definition', label: 'Definición' },
+    { id: 'audio', label: 'Guion de Audio' },
+  ];
+  if (videoUrl) {
+    tabs.push({ id: 'video', label: 'Tema de Video' });
+  }
+
   return (
     <Card>
       <h3 className="text-2xl font-bold text-gray-800 mb-4">{submodule.title}</h3>
-      <p className="text-gray-700 leading-relaxed mb-6">{submodule.content}</p>
       
-      <div className="space-y-4 divide-y divide-gray-200">
-        <div className="pt-4 first:pt-0">
-          <h4 className="font-semibold text-blue-600">Guion de Audio (Resumen)</h4>
-          <p className="text-sm text-gray-600 italic">"{submodule.multimedia.audioScript}"</p>
-          <MediaViewer type="audio" currentUrl={audioUrl} />
-        </div>
-        <div className="pt-4 first:pt-0">
-          <h4 className="font-semibold text-orange-600">{submodule.multimedia.videoConcept.title}</h4>
-          <p className="text-sm text-gray-600">{submodule.multimedia.videoConcept.script}</p>
-          <MediaViewer type="video" currentUrl={videoUrl} />
-        </div>
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`${
+                activeTab === tab.id
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
       </div>
+      
+      <div className="mt-6 min-h-[250px]">
+        {activeTab === 'definition' && (
+          <p className="text-gray-700 leading-relaxed animate-fade-in">{submodule.content}</p>
+        )}
+        {activeTab === 'audio' && (
+          <div className="animate-fade-in">
+            <h4 className="font-semibold text-sky-700">Resumen del Concepto</h4>
+            <p className="text-sm text-gray-600 italic mt-1">"{submodule.multimedia.audioScript}"</p>
+            <MediaViewer type="audio" currentUrl={audioUrl} />
+          </div>
+        )}
+        {activeTab === 'video' && videoUrl && (
+          <div className="animate-fade-in">
+            <h4 className="font-semibold text-orange-700">{submodule.multimedia.videoConcept.title}</h4>
+            <p className="text-sm text-gray-600 mt-1">{submodule.multimedia.videoConcept.script}</p>
+            <MediaViewer type="video" currentUrl={videoUrl} />
+          </div>
+        )}
+      </div>
+
       <style>{`
         .aspect-w-16 { position: relative; padding-bottom: 56.25%; }
         .aspect-h-9 { height: 0; }
