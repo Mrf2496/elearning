@@ -58,6 +58,35 @@ const escapeRoomGame: InteractiveGame = {
     ]
 };
 
+const crosswordGame: InteractiveGame = {
+    type: 'crossword',
+    title: 'Crucigrama de Debida Diligencia',
+    instruction: 'Completa el crucigrama con los conceptos clave de la Debida Diligencia. Haz clic en una celda para empezar y usa las flechas para moverte.',
+    crosswordPuzzles: [
+        {
+            id: 1,
+            clue: "Proceso de conocimiento del asociado para prevenir el LA/FT.",
+            answer: "DILIGENCIA",
+            position: { x: 1, y: 5 },
+            direction: 'across',
+        },
+        {
+            id: 2,
+            clue: "Se debe identificar al ______ final, la persona natural que realmente controla.",
+            answer: "BENEFICIARIO",
+            position: { x: 4, y: 0 },
+            direction: 'down',
+        },
+        {
+            id: 3,
+            clue: "Acrónimo del principio 'Conozca a su Cliente' (en inglés).",
+            answer: "KYC",
+            position: { x: 8, y: 3 },
+            direction: 'down',
+        }
+    ]
+};
+
 const interactiveGameIdeas: InteractiveGame[] = [
   {
     type: 'match',
@@ -129,7 +158,8 @@ const interactiveGameIdeas: InteractiveGame[] = [
     instruction: "Encuentra los 5 elementos clave del sistema SARLAFT en la sopa de letras. Haz clic y arrastra para seleccionar una palabra.",
     words: ["Politicas", "Procedimientos", "Documentacion", "Tecnologia", "Divulgacion"]
   },
-  escapeRoomGame
+  escapeRoomGame,
+  crosswordGame
 ];
 
 
@@ -259,7 +289,8 @@ export const courseData: CourseData = {
         { title: "Debida Diligencia Intensificada", points: ["Se aplica a clientes de alto riesgo (PEPs, etc.)", "Requiere información adicional y aprobación de un nivel superior", "Monitoreo transaccional más frecuente y profundo"], imageConcept: "Un semáforo en rojo, indicando la necesidad de un control más estricto." },
         { title: "La Importancia de la Actualización", points: ["El perfil del asociado puede cambiar", "La información desactualizada pierde valor", "La normativa exige actualización periódica"], imageConcept: "Un calendario con una fecha resaltada para recordar la actualización de datos." },
         { title: "Beneficiario Final", points: ["Persona natural que posee/controla al cliente", "Es obligatorio identificarlo", "Evita el uso de empresas fachada"], imageConcept: "Una estructura de muñecas rusas (matrioskas), donde la más pequeña es el beneficiario final." }
-      ]
+      ],
+      interactiveGameIdeas: [interactiveGameIdeas[7]],
     },
     {
       id: 8,

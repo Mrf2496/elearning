@@ -30,7 +30,7 @@ export interface EscapeRoomPuzzle {
 }
 
 export interface InteractiveGame {
-  type: 'match' | 'drag_drop' | 'quiz' | 'memory' | 'word_search' | 'escape_room';
+  type: 'match' | 'drag_drop' | 'quiz' | 'memory' | 'word_search' | 'escape_room' | 'crossword';
   title: string;
   instruction: string;
   pairs?: { term: string; definition: string }[];
@@ -42,6 +42,13 @@ export interface InteractiveGame {
   words?: string[];
   escapeRoomPuzzles?: EscapeRoomPuzzle[];
   escapeRoomSolution?: string;
+  crosswordPuzzles?: {
+      id: number;
+      clue: string;
+      answer: string;
+      position: { x: number, y: number };
+      direction: 'across' | 'down';
+  }[];
 }
 
 export interface Module {

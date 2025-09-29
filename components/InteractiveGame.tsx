@@ -671,6 +671,236 @@ const EscapeRoomGame: React.FC<InteractiveGameProps> = ({ game }) => {
     );
 };
 
+const CrosswordGame: React.FC<InteractiveGameProps> = ({ game }) => {
+    const puzzles = useMemo(() => game.crosswordPuzzles || [], [game.crosswordPuzzles]);
+    const inputRefs = useRef<Map<string, HTMLInputElement | null>>(new Map());
+
+    const { width, height, cellMap, puzzleStartCells } = useMemo(() => {
+        let w = 0;
+        let h = 0;
+        // FIX: Define a type alias for the cell data to ensure type consistency and avoid inference issues.
+        type CellData = { puzzles: { id: number; direction: 'across' | 'down' }[]; answer: string; number?: number };
+        const map = new Map<string, CellData>();
+        const psc = new Map<number, {x: number, y: number}>();
+
+        puzzles.forEach(p => {
+            psc.set(p.id, p.position);
+            for (let i = 0; i < p.answer.length; i++) {
+                const x = p.position.x + (p.direction === 'across' ? i : 0);
+                const y = p.position.y + (p.direction === 'down' ? i : 0);
+                
+                w = Math.max(w, x + 1);
+                h = Math.max(h, y + 1);
+
+                const key = `${y}-${x}`;
+                // FIX: Explicitly type `cellData` to ensure the object, whether from the map or newly created,
+                // is known to be of a type where the optional 'number' property can be assigned.
+                const cellData: CellData = map.get(key) || { puzzles: [], answer: p.answer[i] };
+                if (i === 0) {
+                    cellData.number = p.id;
+                }
+                cellData.puzzles.push({ id: p.id, direction: p.direction });
+                map.set(key, cellData);
+            }
+        });
+        return { width: w, height: h, cellMap: map, puzzleStartCells: psc };
+    }, [puzzles]);
+    
+    const [userInput, setUserInput] = useState<Record<string, string>>({});
+    const [activeCell, setActiveCell] = useState<{ x: number; y: number } | null>(null);
+    const [activeDirection, setActiveDirection] = useState<'across' | 'down'>('across');
+    const [isSolved, setIsSolved] = useState(false);
+    const [feedback, setFeedback] = useState<Record<string, 'correct' | 'incorrect'>>({});
+
+    const activePuzzle = useMemo(() => {
+        if (!activeCell) return null;
+        const cellData = cellMap.get(`${activeCell.y}-${activeCell.x}`);
+        if (!cellData) return null;
+
+        const puzzleInfo = cellData.puzzles.find(p => p.direction === activeDirection) || cellData.puzzles[0];
+        if (!puzzleInfo) return null;
+        return puzzles.find(p => p.id === puzzleInfo.id);
+    }, [activeCell, activeDirection, puzzles, cellMap]);
+
+    const handleCellClick = (x: number, y: number) => {
+        const key = `${y}-${x}`;
+        if (!cellMap.has(key)) return;
+
+        if (activeCell?.x === x && activeCell?.y === y) {
+            const cellData = cellMap.get(key)!;
+            if (cellData.puzzles.length > 1) {
+                const newDirection = activeDirection === 'across' ? 'down' : 'across';
+                if (cellData.puzzles.some(p => p.direction === newDirection)) {
+                    setActiveDirection(newDirection);
+                }
+            }
+        } else {
+            setActiveCell({ x, y });
+            const cellData = cellMap.get(key)!;
+            if (!cellData.puzzles.some(p => p.direction === activeDirection)) {
+                setActiveDirection(cellData.puzzles[0].direction);
+            }
+        }
+        inputRefs.current.get(key)?.focus();
+    };
+    
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, x: number, y: number) => {
+        const value = e.target.value.toUpperCase().slice(-1);
+        setUserInput(prev => ({ ...prev, [`${y}-${x}`]: value }));
+
+        if (value && activePuzzle) {
+            let nextX = x;
+            let nextY = y;
+            if (activeDirection === 'across') {
+                nextX = x + 1;
+            } else {
+                nextY = y + 1;
+            }
+            const nextKey = `${nextY}-${nextX}`;
+            if(cellMap.has(nextKey)) {
+                inputRefs.current.get(nextKey)?.focus();
+                setActiveCell({ x: nextX, y: nextY });
+            }
+        }
+    };
+    
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, x: number, y: number) => {
+        let nextX = x;
+        let nextY = y;
+        let moved = false;
+        
+        switch (e.key) {
+            case 'ArrowRight': nextX++; moved = true; break;
+            case 'ArrowLeft': nextX--; moved = true; break;
+            case 'ArrowDown': nextY++; moved = true; break;
+            case 'ArrowUp': nextY--; moved = true; break;
+            case 'Backspace':
+                if (!userInput[`${y}-${x}`] || userInput[`${y}-${x}`] === '') {
+                    if (activeDirection === 'across') nextX--;
+                    else nextY--;
+                    moved = true;
+                }
+                break;
+            default: return;
+        }
+        
+        if (moved) {
+            const nextKey = `${nextY}-${nextX}`;
+            if (cellMap.has(nextKey)) {
+                 e.preventDefault();
+                 inputRefs.current.get(nextKey)?.focus();
+                 handleCellClick(nextX, nextY);
+            }
+        }
+    };
+
+    const checkAnswers = () => {
+        const newFeedback: Record<string, 'correct' | 'incorrect'> = {};
+        let allCorrect = true;
+        for (const [key, cellData] of cellMap.entries()) {
+            if (userInput[key] && userInput[key] === cellData.answer) {
+                newFeedback[key] = 'correct';
+            } else {
+                newFeedback[key] = 'incorrect';
+                allCorrect = false;
+            }
+        }
+        setFeedback(newFeedback);
+        if (allCorrect) {
+            setIsSolved(true);
+        }
+    };
+
+    const resetGame = () => {
+        setUserInput({});
+        setFeedback({});
+        setIsSolved(false);
+        setActiveCell(null);
+    }
+    
+    if (isSolved) {
+        return (
+            <Card>
+                <div className="text-center p-6 bg-green-100 rounded-lg">
+                    <h4 className="text-xl font-bold text-green-700">¡Crucigrama Completado!</h4>
+                    <p className="text-green-600">¡Excelente! Has demostrado tu conocimiento de la Debida Diligencia.</p>
+                    <Button onClick={resetGame} variant="secondary" className="mt-4">Jugar de Nuevo</Button>
+                </div>
+            </Card>
+        )
+    }
+
+    return (
+        <Card>
+            <h3 className="text-xl font-semibold mb-2">{game.title}</h3>
+            <p className="text-gray-600 mb-4">{game.instruction}</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="overflow-auto">
+                    <div className="grid gap-px bg-slate-400 w-max p-1 rounded-md" style={{ gridTemplateColumns: `repeat(${width}, 2rem)` }}>
+                        {Array.from({ length: height }).map((_, y) => 
+                            Array.from({ length: width }).map((_, x) => {
+                                const key = `${y}-${x}`;
+                                const cellData = cellMap.get(key);
+                                if (!cellData) {
+                                    return <div key={key} className="w-8 h-8 bg-slate-200" />;
+                                }
+                                
+                                const isActive = activePuzzle && cellData.puzzles.some(p => p.id === activePuzzle.id && p.direction === activeDirection);
+                                const fb = feedback[key];
+
+                                return (
+                                    <div key={key} className="relative w-8 h-8 bg-white">
+                                        {cellData.number && <span className="absolute top-0 left-0.5 text-[0.6rem] font-bold text-slate-500">{cellData.number}</span>}
+                                        <input
+                                            ref={ref => inputRefs.current.set(key, ref)}
+                                            type="text"
+                                            maxLength={1}
+                                            onClick={() => handleCellClick(x, y)}
+                                            onChange={(e) => handleInputChange(e, x, y)}
+                                            onKeyDown={(e) => handleKeyDown(e, x, y)}
+                                            value={userInput[key] || ''}
+                                            className={`w-full h-full border text-center font-bold uppercase rounded-sm
+                                                ${isActive ? 'bg-orange-100 border-orange-400' : 'border-slate-300'}
+                                                ${fb === 'correct' ? 'bg-green-200 text-green-800' : ''}
+                                                ${fb === 'incorrect' ? 'bg-red-200 text-red-800' : ''}
+                                            `}
+                                        />
+                                    </div>
+                                )
+                            })
+                        )}
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div>
+                        <h4 className="font-bold text-slate-700">Horizontales</h4>
+                        <ul className="text-sm space-y-1 mt-1">
+                        {puzzles.filter(p => p.direction === 'across').map(p => (
+                            <li key={p.id} onClick={() => handleCellClick(p.position.x, p.position.y)} className={`cursor-pointer p-1 rounded ${activePuzzle?.id === p.id ? 'bg-orange-100' : ''}`}><strong>{p.id}.</strong> {p.clue}</li>
+                        ))}
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-slate-700">Verticales</h4>
+                        <ul className="text-sm space-y-1 mt-1">
+                        {puzzles.filter(p => p.direction === 'down').map(p => (
+                            <li key={p.id} onClick={() => handleCellClick(p.position.x, p.position.y)} className={`cursor-pointer p-1 rounded ${activePuzzle?.id === p.id ? 'bg-orange-100' : ''}`}><strong>{p.id}.</strong> {p.clue}</li>
+                        ))}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-2">
+                <Button onClick={resetGame} variant="secondary">Reiniciar</Button>
+                <Button onClick={checkAnswers}>Verificar Respuestas</Button>
+            </div>
+        </Card>
+    );
+};
+
+
 const InteractiveGame: React.FC<InteractiveGameProps> = ({ game }) => {
   switch (game.type) {
     case 'match':
@@ -683,6 +913,8 @@ const InteractiveGame: React.FC<InteractiveGameProps> = ({ game }) => {
         return <WordSearchGame game={game} />;
     case 'escape_room':
         return <EscapeRoomGame game={game} />;
+    case 'crossword':
+        return <CrosswordGame game={game} />;
     case 'quiz': // Fallthrough for unimplemented
     default:
       return (
