@@ -21,7 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => {
   const { quizPassed, getCourseProgress } = progressContext;
   
   const courseProgress = getCourseProgress();
-  const isQuizUnlocked = courseProgress >= 90;
+  const isQuizUnlocked = courseProgress >= 85;
 
   const navItemMap: Record<string, View> = {
     'Panel Principal': View.Dashboard,
