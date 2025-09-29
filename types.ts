@@ -29,8 +29,20 @@ export interface EscapeRoomPuzzle {
   solutionHint: string;
 }
 
+export interface DecisionScenario {
+  id: number;
+  title: string;
+  prompt: string;
+  options: {
+    id: number;
+    text: string;
+    consequence: string;
+    isCorrect: boolean;
+  }[];
+}
+
 export interface InteractiveGame {
-  type: 'match' | 'drag_drop' | 'quiz' | 'memory' | 'word_search' | 'escape_room' | 'crossword';
+  type: 'match' | 'drag_drop' | 'quiz' | 'memory' | 'word_search' | 'escape_room' | 'crossword' | 'decision_simulator';
   title: string;
   instruction: string;
   pairs?: { term: string; definition: string }[];
@@ -49,6 +61,7 @@ export interface InteractiveGame {
       position: { x: number, y: number };
       direction: 'across' | 'down';
   }[];
+  decisionScenarios?: DecisionScenario[];
 }
 
 export interface Module {

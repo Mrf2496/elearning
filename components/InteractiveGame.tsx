@@ -900,6 +900,101 @@ const CrosswordGame: React.FC<InteractiveGameProps> = ({ game }) => {
     );
 };
 
+const DecisionSimulatorGame: React.FC<InteractiveGameProps> = ({ game }) => {
+    const scenarios = useMemo(() => game.decisionScenarios || [], [game.decisionScenarios]);
+    const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
+    const [selectedOption, setSelectedOption] = useState<number | null>(null);
+    const [showConsequence, setShowConsequence] = useState(false);
+
+    if (scenarios.length === 0) return null;
+
+    const currentScenario = scenarios[currentScenarioIndex];
+    const isLastScenario = currentScenarioIndex === scenarios.length - 1;
+
+    const handleOptionSelect = (optionId: number) => {
+        if (showConsequence) return;
+        setSelectedOption(optionId);
+        setShowConsequence(true);
+    };
+
+    const handleNext = () => {
+        if (!isLastScenario) {
+            setCurrentScenarioIndex(prev => prev + 1);
+            setSelectedOption(null);
+            setShowConsequence(false);
+        }
+    };
+
+    const resetGame = () => {
+        setCurrentScenarioIndex(0);
+        setSelectedOption(null);
+        setShowConsequence(false);
+    };
+
+    const allCompleted = isLastScenario && showConsequence;
+
+    return (
+        <Card>
+            <h3 className="text-xl font-semibold mb-2">{game.title}</h3>
+            {!allCompleted && <p className="text-gray-600 mb-4">{game.instruction}</p>}
+
+            {allCompleted ? (
+                 <div className="text-center p-6 bg-green-100 rounded-lg animate-fade-in">
+                    <h4 className="text-2xl font-bold text-green-700">¡Simulación Completada!</h4>
+                    <p className="text-green-600 mt-2">Has enfrentado decisiones críticas y visto sus consecuencias. Este conocimiento es clave para proteger a tu entidad y a ti mismo.</p>
+                    <Button onClick={resetGame} variant="secondary" className="mt-4">Jugar de Nuevo</Button>
+                </div>
+            ) : (
+                <div className="animate-fade-in">
+                    <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-orange-400">
+                        <h4 className="font-bold text-gray-800">{currentScenario.title} ({currentScenarioIndex + 1}/{scenarios.length})</h4>
+                        <p className="mt-2 text-gray-700">{currentScenario.prompt}</p>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                        {currentScenario.options.map(option => {
+                            const isSelected = selectedOption === option.id;
+                            let buttonClass = 'bg-white hover:bg-gray-100 text-gray-800';
+
+                            if(showConsequence) {
+                                if (option.isCorrect) {
+                                    buttonClass = 'bg-green-100 border-green-500 text-green-800 font-semibold';
+                                } else if (isSelected) {
+                                    buttonClass = 'bg-red-100 border-red-500 text-red-800 font-semibold';
+                                }
+                            } else if (isSelected) {
+                                buttonClass = 'bg-sky-100 border-sky-500 text-sky-800';
+                            }
+
+                            return (
+                                <button
+                                    key={option.id}
+                                    onClick={() => handleOptionSelect(option.id)}
+                                    disabled={showConsequence}
+                                    className={`w-full text-left p-3 rounded-lg border-2 transition-colors ${buttonClass}`}
+                                >
+                                    {option.text}
+                                </button>
+                            )
+                        })}
+                    </div>
+
+                    {showConsequence && selectedOption !== null && (
+                        <div className="mt-6 p-4 rounded-lg animate-fade-in bg-opacity-50
+                            ${currentScenario.options.find(o => o.id === selectedOption)?.isCorrect ? 'bg-green-100' : 'bg-red-100'}">
+                            <p className="text-gray-800">{currentScenario.options.find(o => o.id === selectedOption)?.consequence}</p>
+                        </div>
+                    )}
+
+                    <div className="mt-6 text-right">
+                        <Button onClick={handleNext} disabled={!showConsequence || isLastScenario}>Siguiente Decisión</Button>
+                    </div>
+                </div>
+            )}
+        </Card>
+    );
+};
+
 
 const InteractiveGame: React.FC<InteractiveGameProps> = ({ game }) => {
   switch (game.type) {
@@ -915,6 +1010,8 @@ const InteractiveGame: React.FC<InteractiveGameProps> = ({ game }) => {
         return <EscapeRoomGame game={game} />;
     case 'crossword':
         return <CrosswordGame game={game} />;
+    case 'decision_simulator':
+        return <DecisionSimulatorGame game={game} />;
     case 'quiz': // Fallthrough for unimplemented
     default:
       return (

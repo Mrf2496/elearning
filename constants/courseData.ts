@@ -100,6 +100,43 @@ const reportMatchGame: InteractiveGame = {
   ]
 };
 
+const decisionSimulatorGame: InteractiveGame = {
+  type: 'decision_simulator',
+  title: "Simulador de Decisiones: Las Consecuencias de SARLAFT",
+  instruction: "Eres el Oficial de Cumplimiento. Enfrenta tres escenarios críticos y elige la acción correcta. Tus decisiones tendrán consecuencias directas para la entidad, para ti y para la reputación de la cooperativa.",
+  decisionScenarios: [
+    {
+      id: 1,
+      title: 'Decisión 1: La Presión Interna',
+      prompt: 'Un analista te presenta una operación inusual de un asociado antiguo y muy importante. Tu gerente te sugiere "no reportar para no incomodar al asociado". ¿Qué haces?',
+      options: [
+        { id: 1, text: 'Hacer caso al gerente y no reportar.', consequence: 'CONSECUENCIA: La Supersolidaria podría sancionar a la entidad y a los administradores por omisión de control. Esta es una falta grave.', isCorrect: false },
+        { id: 2, text: 'Documentar el caso, desestimar la sugerencia del gerente y seguir el procedimiento para determinar si es una operación sospechosa.', consequence: 'CONSECUENCIA: Has actuado con diligencia, protegiendo a la entidad de posibles sanciones administrativas y cumpliendo con tu deber.', isCorrect: true },
+        { id: 3, text: 'Reportar directamente sin análisis para cubrirte las espaldas.', consequence: 'CONSECUENCIA: Reportar sin un análisis debido puede erosionar la credibilidad de tus reportes ante la UIAF. El análisis interno es un paso crucial.', isCorrect: false }
+      ]
+    },
+    {
+      id: 2,
+      title: 'Decisión 2: El Favor a un Amigo',
+      prompt: 'Un amigo cercano te pide que le ayudes a vincular a un "inversionista" a la cooperativa de forma rápida, omitiendo algunos documentos "para agilizar". Te asegura que es de confianza. ¿Qué haces?',
+      options: [
+        { id: 1, text: 'Aceptar y agilizar el trámite. Es un amigo de confianza.', consequence: 'CONSECUENCIA: Podrías ser cómplice de lavado de activos. La omisión de la debida diligencia tiene consecuencias penales, incluyendo la cárcel.', isCorrect: false },
+        { id: 2, text: 'Explicarle a tu amigo que TODOS deben cumplir el 100% del proceso de debida diligencia, sin excepción.', consequence: 'CONSECUENCIA: Has protegido tu integridad y a la entidad de un riesgo penal grave. La amistad no puede estar por encima de la ley.', isCorrect: true }
+      ]
+    },
+    {
+      id: 3,
+      title: 'Decisión 3: El Rumor en la Prensa',
+      prompt: 'Un periodista te contacta sobre un rumor de que la cooperativa está siendo investigada por LA/FT y te pide una declaración inmediata para calmar a los asociados. ¿Qué haces?',
+      options: [
+        { id: 1, text: 'Negar todo categóricamente para cortar el rumor de raíz.', consequence: 'CONSECUENCIA: Si el rumor es cierto, una mentira puede destruir completamente la credibilidad de la entidad cuando la verdad salga a la luz.', isCorrect: false },
+        { id: 2, text: 'Confirmar que están colaborando con las autoridades para ser transparentes.', consequence: 'CONSECUENCIA: Una confirmación prematura puede causar pánico financiero, retiros masivos y un daño reputacional irreparable.', isCorrect: false },
+        { id: 3, text: 'Agradecer la llamada, no confirmar ni negar, y dirigir al periodista al canal de comunicación oficial de la entidad.', consequence: 'CONSECUENCIA: Has manejado la crisis correctamente, evitando declaraciones impulsivas y protegiendo la reputación de la entidad mientras se gestiona la situación internamente.', isCorrect: true }
+      ]
+    }
+  ]
+};
+
 const interactiveGameIdeas: InteractiveGame[] = [
   {
     type: 'match',
@@ -173,7 +210,8 @@ const interactiveGameIdeas: InteractiveGame[] = [
   },
   escapeRoomGame,
   crosswordGame,
-  reportMatchGame
+  reportMatchGame,
+  decisionSimulatorGame,
 ];
 
 
@@ -339,7 +377,8 @@ export const courseData: CourseData = {
         { title: "Delitos Penales Asociados", points: ["Lavado de Activos (Art. 323 C.P.)", "Omisión de Reporte (Art. 325 C.P.)", "Enriquecimiento Ilícito (Art. 327 C.P.)", "Testaferrato (Art. 326 C.P.)"], imageConcept: "Un libro de código penal abierto en las páginas de los artículos mencionados." },
         { title: "Riesgo de Contagio", points: ["El descrédito de una entidad puede afectar a otras", "Pánico financiero entre asociados del sector", "Endurecimiento de las relaciones con el sistema bancario"], imageConcept: "Una serie de fichas de dominó cayendo, la primera etiquetada como 'Entidad Incumplida'." },
         { title: "La Prevención es la Mejor Inversión", points: ["Un SARLAFT robusto protege a la entidad", "Genera confianza y transparencia", "Es un factor de sostenibilidad a largo plazo"], imageConcept: "Un escudo protegiendo el logo de una cooperativa." }
-      ]
+      ],
+      interactiveGameIdeas: [interactiveGameIdeas[9]],
     },
     {
       id: 10,
