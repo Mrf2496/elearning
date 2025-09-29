@@ -10,8 +10,6 @@ import CheckCircleIcon from './icons/CheckCircleIcon';
 import UiafFlowOAI from './oai/UiafFlowOAI';
 import RiskFactorSorterOAI from './oai/RiskFactorSorterOAI';
 import { getAudioUrl, getVideoUrl } from '../lib/db';
-import ChevronLeftIcon from './icons/ChevronLeftIcon';
-import ChevronRightIcon from './icons/ChevronRightIcon';
 
 interface ModuleViewProps {
   module: Module;
@@ -40,12 +38,14 @@ const ModuleView: React.FC<ModuleViewProps> = ({
     }));
     
     if (module.slides && module.slides.length > 0) {
-        items.push({ type: 'slides', id: `${module.id}-slides`, title: 'Diapositivas Clave' });
+        items.push({ type: 'slides', id: `${module.id}-slides`, title: 'Presentacion' });
     }
 
-    if (module.interactiveGameIdeas && module.interactiveGameIdeas.length > 0) {
-        module.interactiveGameIdeas.forEach((game, index) => {
-            items.push({ type: 'game', id: `${module.id}-game-${index}`, title: game.title });
+    const games = module.interactiveGameIdeas || [];
+    if (games.length > 0) {
+        games.forEach((_game, index) => {
+            const title = games.length > 1 ? `Juegos Didacticos ${index + 1}` : 'Juegos Didacticos';
+            items.push({ type: 'game', id: `${module.id}-game-${index}`, title });
         });
     }
     
@@ -129,24 +129,8 @@ const ModuleView: React.FC<ModuleViewProps> = ({
     };
   }, [selectedItemId, navigableItems, completedSubmodules, completeSubmodule]);
 
-  const currentItemIndex = useMemo(() => navigableItems.findIndex(item => item.id === selectedItemId), [selectedItemId, navigableItems]);
-
   const handleSelectItem = (itemId: string) => {
     setSelectedItemId(itemId);
-  };
-  
-  const handleNextItem = () => {
-    if (currentItemIndex > -1 && currentItemIndex < navigableItems.length - 1) {
-      const nextItemId = navigableItems[currentItemIndex + 1].id;
-      setSelectedItemId(nextItemId);
-    }
-  };
-
-  const handlePreviousItem = () => {
-    if (currentItemIndex > 0) {
-      const prevItemId = navigableItems[currentItemIndex - 1].id;
-      setSelectedItemId(prevItemId);
-    }
   };
 
   if (!progressContext) return null;
@@ -154,7 +138,7 @@ const ModuleView: React.FC<ModuleViewProps> = ({
   const selectedItem = navigableItems.find(item => item.id === selectedItemId);
   const isEven = module.id % 2 === 0;
 
-  const renderRightPanelContent = () => {
+  const renderContent = () => {
     if (!selectedItem) return <Card><p>Selecciona un tema para comenzar.</p></Card>;
 
     switch (selectedItem.type) {
@@ -199,48 +183,34 @@ const ModuleView: React.FC<ModuleViewProps> = ({
         )}
       </Card>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <Card>
-            <h3 className="text-xl font-semibold mb-4 border-b pb-2">Temas del Módulo</h3>
-            <ul className="space-y-2">
-              {navigableItems.map((item) => (
-                <li key={item.id}>
-                  <button
-                    onClick={() => handleSelectItem(item.id)}
-                    className={`w-full text-left p-3 rounded-lg flex items-center justify-between transition-colors ${
-                      selectedItemId === item.id
-                        ? (isEven ? 'bg-sky-100 font-semibold text-sky-700' : 'bg-orange-100 font-semibold text-orange-700')
-                        : 'text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    <span className="text-sm">{item.title}</span>
-                    {completedSubmodules.has(item.id) && <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 ml-2" />}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </Card>
+      <div className="bg-white rounded-lg shadow-md">
+        <div className="border-b border-gray-200 px-4 sm:px-6">
+            <nav className="-mb-px flex space-x-4 sm:space-x-6 overflow-x-auto" aria-label="Temas del módulo">
+                {navigableItems.map(item => (
+                    <button
+                        key={item.id}
+                        onClick={() => handleSelectItem(item.id)}
+                        className={`
+                            ${selectedItemId === item.id
+                                ? (isEven ? 'border-sky-500 text-sky-600' : 'border-orange-500 text-orange-600')
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }
+                            group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap
+                        `}
+                    >
+                        <span className="mr-2">{item.title}</span>
+                        {completedSubmodules.has(item.id) && <CheckCircleIcon className="w-5 h-5 text-green-500" />}
+                    </button>
+                ))}
+            </nav>
         </div>
-
-        <div className="lg:col-span-2 space-y-4">
-          <div className="animate-fade-in">
-            {renderRightPanelContent()}
-          </div>
-          
-          <Card>
-              <div className="flex justify-between items-center">
-                  <Button onClick={handlePreviousItem} disabled={currentItemIndex <= 0} variant="secondary" className="flex items-center space-x-2">
-                      <ChevronLeftIcon className="w-4 h-4" /> <span>Anterior</span>
-                  </Button>
-                  <span className="text-sm font-medium text-gray-500">{currentItemIndex + 1} / {navigableItems.length}</span>
-                  <Button onClick={handleNextItem} disabled={currentItemIndex >= navigableItems.length - 1} variant="secondary" className="flex items-center space-x-2">
-                      <span>Siguiente</span> <ChevronRightIcon className="w-4 h-4" />
-                  </Button>
-              </div>
-          </Card>
+        <div className="p-4 sm:p-6">
+            <div className="animate-fade-in">
+                {renderContent()}
+            </div>
         </div>
       </div>
+      
       <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
         <Button 
           onClick={onPreviousModule} 
