@@ -87,6 +87,19 @@ const crosswordGame: InteractiveGame = {
     ]
 };
 
+const reportMatchGame: InteractiveGame = {
+  type: 'match',
+  title: "Emparejando Conceptos de Reportes",
+  instruction: "Arrastra la definición correcta a cada término clave sobre los reportes a la UIAF.",
+  pairs: [
+    { term: "ROS", definition: "Informe enviado a la UIAF sobre una operación sin justificación aparente." },
+    { term: "Tipping Off", definition: "Delito de alertar al asociado que está siendo reportado." },
+    { term: "SIREL", definition: "Plataforma en línea para el envío seguro de reportes a la UIAF." },
+    { term: "Reporte de Efectivo", definition: "Informe objetivo sobre transacciones que superan un monto específico." },
+    { term: "Confidencialidad", definition: "Principio que exige absoluto secreto sobre los reportes enviados." }
+  ]
+};
+
 const interactiveGameIdeas: InteractiveGame[] = [
   {
     type: 'match',
@@ -159,7 +172,8 @@ const interactiveGameIdeas: InteractiveGame[] = [
     words: ["Politicas", "Procedimientos", "Documentacion", "Tecnologia", "Divulgacion"]
   },
   escapeRoomGame,
-  crosswordGame
+  crosswordGame,
+  reportMatchGame
 ];
 
 
@@ -307,7 +321,8 @@ export const courseData: CourseData = {
         { title: "Reporte de Transacciones en Efectivo", points: ["Se reportan transacciones individuales sobre un umbral", "También transacciones múltiples que sumen un umbral en un mes", "Es un reporte objetivo, no implica sospecha"], imageConcept: "Una pila de billetes con una etiqueta que indica el monto umbral." },
         { title: "El Sistema SIREL de la UIAF", points: ["Plataforma en línea para el envío de reportes", "Es seguro y confidencial", "La entidad debe tener un usuario registrado"], imageConcept: "La pantalla de inicio de sesión de una plataforma web segura." },
         { title: "Consecuencias de NO Reportar", points: ["Sanciones administrativas de la Supersolidaria", "Posible complicidad en delitos de LA/FT", "Debilita todo el sistema de prevención nacional"], imageConcept: "Una cadena con un eslabón roto, simbolizando la falla en el sistema." }
-      ]
+      ],
+      interactiveGameIdeas: [interactiveGameIdeas[8]],
     },
     {
       id: 9,
