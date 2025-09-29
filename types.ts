@@ -82,6 +82,7 @@ export interface Module {
   slides: Slide[];
   interactiveGameIdeas?: InteractiveGame[];
   oai?: 'uiaf_flow' | 'risk_factor_sorter';
+  duration?: string;
 }
 
 export interface CaseStudy {

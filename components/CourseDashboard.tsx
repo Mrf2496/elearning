@@ -3,8 +3,11 @@ import { courseData } from '../constants/courseData';
 import { CourseProgressContext } from '../context/CourseProgressContext';
 import Card from './common/Card';
 import ProgressBar from './common/ProgressBar';
-import CheckCircleIcon from './icons/CheckCircleIcon';
+import ModuleCard from './ModuleCard';
 import BookOpenIcon from './icons/BookOpenIcon';
+import ClockIcon from './icons/ClockIcon';
+import AwardIcon from './icons/AwardIcon';
+
 
 interface CourseDashboardProps {
   onSelectModule: (moduleId: number) => void;
@@ -17,49 +20,62 @@ const CourseDashboard: React.FC<CourseDashboardProps> = ({ onSelectModule }) => 
     return <div>Cargando...</div>;
   }
 
-  const { isModuleCompleted, getCourseProgress } = progressContext;
+  const { isModuleCompleted, getCourseProgress, completedModules, quizPassed } = progressContext;
   const courseProgress = getCourseProgress();
-  
+  const completedModulesCount = courseData.modules.filter(m => isModuleCompleted(m.id)).length;
+
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold text-sky-800 mb-2">Bienvenido al Curso SARLAFT</h2>
-        <p className="text-lg text-slate-600">Un recorrido completo por el Sistema de Administración del Riesgo de Lavado de Activos y de la Financiación del Terrorismo para el Sector Solidario.</p>
-      </div>
-
-      <Card>
-        <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-slate-700">Progreso General del Curso</h3>
-            <span className="text-lg font-bold text-orange-500">{Math.round(courseProgress)}%</span>
+      <Card className="p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-slate-800">Progreso General del Curso</h3>
+          <span className="text-2xl font-bold text-slate-700 mt-2 sm:mt-0">{Math.round(courseProgress)}%</span>
         </div>
         <ProgressBar progress={courseProgress} />
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 -mx-6 px-2">
+            <div className="py-4 px-4 flex items-center justify-center sm:justify-start">
+                <BookOpenIcon className="w-8 h-8 text-sky-500 mr-4 flex-shrink-0" />
+                <div>
+                    <p className="text-sm text-slate-500">Módulos</p>
+                    <p className="text-xl font-bold text-slate-800">{completedModulesCount}/{courseData.modules.length}</p>
+                </div>
+            </div>
+             <div className="py-4 px-4 flex items-center justify-center sm:justify-start">
+                <ClockIcon className="w-8 h-8 text-orange-500 mr-4 flex-shrink-0" />
+                <div>
+                    <p className="text-sm text-slate-500">Tiempo</p>
+                    <p className="text-xl font-bold text-slate-800">~8h</p>
+                </div>
+            </div>
+             <div className="py-4 px-4 flex items-center justify-center sm:justify-start">
+                <AwardIcon className="w-8 h-8 text-green-500 mr-4 flex-shrink-0" />
+                <div>
+                    <p className="text-sm text-slate-500">Certificado</p>
+                    <p className={`text-xl font-bold ${quizPassed ? 'text-green-600' : 'text-slate-800'}`}>{quizPassed ? 'Obtenido' : 'Pendiente'}</p>
+                </div>
+            </div>
+        </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...courseData.modules, {id: 11, title: 'Casos Prácticos', description: 'Aplica tus conocimientos en escenarios reales del sector solidario.'}].map((module) => {
-          const completed = isModuleCompleted(module.id);
-          const isEven = module.id % 2 === 0;
-          return (
-            <div
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {courseData.modules.map((module) => (
+            <ModuleCard
               key={module.id}
+              module={module}
+              isCompleted={isModuleCompleted(module.id)}
               onClick={() => onSelectModule(module.id)}
-              className={`bg-white rounded-lg shadow-md p-6 flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border-t-4 ${isEven ? 'border-sky-500' : 'border-orange-500'}`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className={`text-sm font-semibold py-1 px-3 rounded-full ${isEven ? 'bg-sky-100 text-sky-700' : 'bg-orange-100 text-orange-700'}`}>
-                  Módulo {module.id}
-                </span>
-                {completed ? (
-                  <CheckCircleIcon className="w-7 h-7 text-green-500" />
-                ) : (
-                  <BookOpenIcon className="w-7 h-7 text-gray-400" />
-                )}
-              </div>
-              <h4 className="text-xl font-bold text-slate-800 mb-2 flex-grow">{module.title}</h4>
-              <p className="text-slate-600 text-sm">{module.description}</p>
-            </div>
-          );
-        })}
+            />
+        ))}
+        <ModuleCard
+            module={{
+                id: 11, 
+                title: 'Casos Prácticos', 
+                description: 'Aplica tus conocimientos en escenarios reales del sector solidario.',
+                duration: "~60 min"
+            }}
+            isCompleted={completedModules.has(11)}
+            onClick={() => onSelectModule(11)}
+        />
       </div>
     </div>
   );

@@ -850,11 +850,11 @@ export default function App() {
 
   return (
     <CourseProgressContext.Provider value={progressHook}>
-      <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex flex-1 overflow-hidden">
-          <Sidebar onNavigate={handleNavigate} onSelectModule={handleSelectModule} />
-          <main className="flex-1 p-6 md:p-10 overflow-y-auto">
+          <Sidebar currentView={currentView} onNavigate={handleNavigate} />
+          <main className="flex-1 p-6 md:p-8 overflow-y-auto">
             {renderContent()}
           </main>
         </div>

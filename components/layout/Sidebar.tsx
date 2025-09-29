@@ -1,84 +1,92 @@
-
-
 import React, { useContext } from 'react';
 import { View } from '../../types';
 import { CourseProgressContext } from '../../context/CourseProgressContext';
-import { courseData } from '../../constants/courseData';
-import CheckCircleIcon from '../icons/CheckCircleIcon';
+import HomeIcon from '../icons/HomeIcon';
+import BookOpenIcon from '../icons/BookOpenIcon';
+import FileTextIcon from '../icons/FileTextIcon';
+import QuestionMarkCircleIcon from '../icons/QuestionMarkCircleIcon';
+import AwardIcon from '../icons/AwardIcon';
+import ChevronRightIcon from '../icons/ChevronRightIcon';
 import LockIcon from '../icons/LockIcon';
 
 interface SidebarProps {
+  currentView: View;
   onNavigate: (view: View) => void;
-  onSelectModule: (moduleId: number) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onSelectModule }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => {
   const progressContext = useContext(CourseProgressContext);
   if (!progressContext) return null;
 
-  const { quizPassed, getCourseProgress, getModuleProgress, isModuleCompleted } = progressContext;
+  const { quizPassed, getCourseProgress } = progressContext;
   
-  const allModulesAndCasesCompleted = getCourseProgress() >= 100;
+  const courseProgress = getCourseProgress();
+  const allModulesAndCasesCompleted = courseProgress >= 100;
+
+  const navItemMap: Record<string, View> = {
+    'Panel Principal': View.Dashboard,
+    'Módulos': View.Dashboard,
+    'Casos Prácticos': View.CaseStudies,
+    'Evaluación Final': View.Quiz,
+    'Certificado': View.Certificate,
+  };
 
   const navItems = [
-    { view: View.Dashboard, label: 'Inicio', id: 'dash' },
-    ...courseData.modules.map(m => ({ view: View.Module, label: `Módulo ${m.id}`, id: m.id })),
-    { view: View.CaseStudies, label: 'Módulo 11: Casos Prácticos', id: 11 },
-    { view: View.Quiz, label: 'Evaluación Final', id: 'quiz' },
-    { view: View.Certificate, label: 'Certificado', id: 'cert' },
+    { label: 'Panel Principal', icon: HomeIcon, view: View.Dashboard },
+    { label: 'Módulos', icon: BookOpenIcon, view: View.Dashboard },
+    { label: 'Casos Prácticos', icon: FileTextIcon, view: View.CaseStudies },
+    { label: 'Evaluación Final', icon: QuestionMarkCircleIcon, view: View.Quiz, locked: !allModulesAndCasesCompleted },
+    { label: 'Certificado', icon: AwardIcon, view: View.Certificate, locked: !quizPassed },
   ];
-  
-  const handleSelect = (item: typeof navItems[0]) => {
-      if(item.view === View.Module || item.view === View.CaseStudies) {
-          if (typeof item.id === 'number') {
-              onSelectModule(item.id);
-          }
-      } else {
-          onNavigate(item.view);
-      }
-  }
 
   return (
-    <aside className="w-64 bg-white shadow-md p-4 flex-shrink-0 hidden md:block border-r border-slate-200">
-      <nav>
-        <ul>
+    <aside className="w-72 bg-white p-6 flex-shrink-0 hidden md:flex flex-col no-print">
+      <h2 className="text-lg font-bold text-slate-900 mb-6">Navegación</h2>
+      <nav className="flex-grow">
+        <ul className="space-y-1.5">
           {navItems.map((item) => {
-            const isModuleOrCases = typeof item.id === 'number';
-            const isQuiz = item.id === 'quiz';
-            const isCert = item.id === 'cert';
-            
-            const progress = isModuleOrCases ? getModuleProgress(item.id) : 0;
-            const isCompleted = isModuleOrCases ? isModuleCompleted(item.id) : false;
+            let isVisuallyActive = currentView === item.view;
+            if (item.label === 'Módulos' && (currentView === View.Module || currentView === View.Dashboard)) {
+              isVisuallyActive = true;
+            }
+             if (item.label === 'Panel Principal' && isVisuallyActive) { // Only Panel Principal has the special active style
+                // This is a design choice from the image.
+             } else {
+                 isVisuallyActive = false;
+             }
 
-            const isLocked = (isQuiz && !allModulesAndCasesCompleted) || (isCert && !quizPassed);
 
             return (
-              <li key={item.id} className="mb-1">
+              <li key={item.label}>
                 <button
-                  onClick={() => handleSelect(item)}
-                  disabled={isLocked}
-                  className="w-full text-left p-3 rounded-md transition-colors duration-150 group disabled:cursor-not-allowed disabled:opacity-60 text-slate-600 hover:bg-sky-100"
+                  onClick={() => onNavigate(item.view)}
+                  disabled={item.locked}
+                  className={`w-full text-left p-3 rounded-md transition-colors duration-200 group disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between
+                    ${
+                      isVisuallyActive
+                        ? 'bg-sky-500 text-white font-semibold shadow'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }
+                  `}
                 >
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold group-hover:text-sky-800">{item.label}</span>
-                    {(isCompleted || (isCert && quizPassed)) && <CheckCircleIcon className="w-5 h-5 text-green-500" />}
-                    {isLocked && <LockIcon className="w-5 h-5 text-slate-400" />}
+                  <div className="flex items-center space-x-3">
+                    <item.icon className="w-5 h-5" />
+                    <span className="text-sm font-medium">{item.label}</span>
                   </div>
-                  
-                  {isModuleOrCases && (
-                    <div className="mt-2 w-full bg-slate-200 rounded-full h-1.5 dark:bg-gray-700">
-                        <div 
-                            className={`h-1.5 rounded-full transition-all duration-500 ${isCompleted ? 'bg-green-500' : 'bg-sky-500'}`}
-                            style={{ width: `${progress}%` }}
-                        ></div>
-                    </div>
-                  )}
+                  {isVisuallyActive && <ChevronRightIcon className="w-5 h-5" />}
+                  {item.locked && <LockIcon className="w-5 h-5 text-slate-400" />}
                 </button>
               </li>
             );
           })}
         </ul>
       </nav>
+      <div className="mt-auto">
+        <div className="p-4 rounded-lg bg-orange-50 border border-orange-200 text-center">
+            <p className="text-sm font-semibold text-orange-800">Completa el curso al 100% para acceder al certificado</p>
+            <p className="text-sm font-bold text-orange-900 mt-1">Progreso: {Math.round(courseProgress)}%</p>
+        </div>
+      </div>
     </aside>
   );
 };

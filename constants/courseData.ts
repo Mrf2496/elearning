@@ -267,6 +267,7 @@ export const courseData: CourseData = {
       id: 1,
       title: "Fundamentos de SARLAFT",
       description: "Introducción a los conceptos básicos del Lavado de Activos y Financiación del Terrorismo.",
+      duration: "~45 min",
       submodules: [
         { id: "1-1", title: "¿Qué es el Lavado de Activos (LA)?", content: "El lavado de activos es el proceso mediante el cual se busca dar apariencia de legalidad a recursos de origen ilícito. Involucra tres etapas: colocación, estratificación e integración.", multimedia: { audioScript: "Resumen del concepto y etapas del lavado de activos.", videoConcept: { title: "El Ciclo del Lavado de Activos", script: "" } } },
         { id: "1-2", title: "¿Qué es la Financiación del Terrorismo (FT)?", content: "La financiación del terrorismo es cualquier forma de apoyo económico o material a grupos terroristas. No siempre proviene de fuentes ilícitas, pero su fin siempre lo es.", multimedia: { audioScript: "Explicación de la financiación del terrorismo y sus diferencias con el LA.", videoConcept: { title: "Fuentes de la Financiación del Terrorismo", script: "Infografía animada mostrando diversas fuentes, lícitas e ilícitas, que pueden financiar actividades terroristas." } } },
@@ -285,6 +286,7 @@ export const courseData: CourseData = {
       id: 2,
       title: "Normativa y Marco Legal",
       description: "Regulaciones de la Supersolidaria y otras entidades que rigen el SARLAFT en Colombia.",
+      duration: "~45 min",
       submodules: [
         { id: "2-1", title: "Circular Básica Jurídica de la Supersolidaria", content: "Análisis del Título IV, Capítulo XI, que establece las instrucciones para la administración del SARLAFT en el sector solidario.", multimedia: { audioScript: "Resumen de los puntos clave de la Circular Básica Jurídica.", videoConcept: { title: "Navegando la Circular", script: "Video explicativo con un experto que resalta las secciones más importantes del documento para las entidades solidarias." } } },
         { id: "2-2", title: "Leyes y Decretos Relevantes", content: "Estudio de normas como el Código Penal Colombiano (tipificación de LA/FT), Ley 190 de 1995 (Estatuto Anticorrupción), entre otras.", multimedia: { audioScript: "Mención de las leyes más importantes y su propósito.", videoConcept: { title: "Línea de Tiempo Normativa", script: "Animación que muestra la evolución de las leyes anti-lavado en Colombia." } } },
@@ -303,6 +305,7 @@ export const courseData: CourseData = {
       id: 3,
       title: "Segmentación de Factores de Riesgo",
       description: "Cómo clasificar clientes, productos, canales y jurisdicciones para una gestión efectiva del riesgo.",
+      duration: "~45 min",
        submodules: [
         { id: "3-1", title: "Concepto de Segmentación", content: "La segmentación consiste en agrupar los factores de riesgo (asociados, productos, etc.) en categorías homogéneas para analizar su comportamiento y detectar operaciones inusuales de manera más efectiva.", multimedia: { audioScript: "Introducción a por qué la segmentación es un pilar fundamental del SARLAFT.", videoConcept: { title: "De la Multitud al Detalle", script: "Animación que muestra una gran masa de asociados siendo organizada en pequeños grupos con características similares, facilitando la vigilancia." } } },
         { id: "3-2", title: "Factor de Riesgo: Asociados/Clientes", content: "Se deben considerar variables como actividad económica, ingresos, ubicación geográfica, y si es una Persona Expuesta Políticamente (PEP).", multimedia: { audioScript: "Claves para segmentar a los asociados y la importancia de identificar a los PEPs.", videoConcept: { title: "¿Quién es quién?", script: "Infografía interactiva que permite al usuario hacer clic en perfiles de asociados ficticios para ver su nivel de riesgo." } } },
@@ -321,6 +324,7 @@ export const courseData: CourseData = {
       id: 4,
       title: "Componentes del Sistema SARLAFT",
       description: "Los elementos que componen un sistema SARLAFT robusto y funcional.",
+      duration: "~45 min",
       submodules: [
         { id: "4-1", title: "Políticas", content: "Las políticas son las directrices generales aprobadas por la junta directiva o consejo de administración. Definen el compromiso de la entidad con la prevención del LA/FT.", multimedia: { audioScript: "Explicación del rol de las políticas como la 'constitución' del SARLAFT en la entidad.", videoConcept: { title: "La Pirámide del SARLAFT", script: "Animación que muestra una pirámide donde la base son las políticas, sobre las cuales se construyen los procedimientos y herramientas." } } },
         { id: "4-2", title: "Procedimientos", content: "Los procedimientos son el 'cómo' se aplican las políticas. Incluyen manuales para la vinculación de asociados, monitoreo de operaciones, gestión de alertas, etc.", multimedia: { audioScript: "Diferencia entre políticas (qué) y procedimientos (cómo).", videoConcept: { title: "Manual de Procedimientos Animado", script: "Un video corto que simula pasar las páginas de un manual, mostrando de forma gráfica los pasos para la debida diligencia." } } },
@@ -339,6 +343,7 @@ export const courseData: CourseData = {
       id: 5,
       title: "Fases de la Gestión del Riesgo",
       description: "El ciclo continuo de identificar, medir, controlar y monitorear los riesgos de LA/FT.",
+      duration: "~45 min",
       submodules: [
         { id: "5-1", title: "Identificación", content: "Reconocer y documentar los riesgos de LA/FT a los que está expuesta la entidad a través de sus factores de riesgo (asociados, productos, canales, jurisdicciones).", multimedia: { audioScript: "La identificación es el primer paso: no se puede gestionar un riesgo que no se conoce.", videoConcept: { title: "Usando el Radar de Riesgos", script: "Animación de una pantalla de radar donde 'blips' aparecen representando diferentes riesgos potenciales en cada factor." } } },
         { id: "5-2", title: "Medición", content: "Estimar la probabilidad de ocurrencia de los riesgos identificados y su impacto potencial en caso de materializarse. Se utilizan matrices de riesgo para calificar el riesgo.", multimedia: { audioScript: "Cómo pasar de identificar un riesgo a medir su posible impacto.", videoConcept: { title: "La Matriz de Riesgo Interactiva", script: "Una matriz de probabilidad vs. impacto donde se arrastran riesgos a diferentes cuadrantes para ver su calificación (Bajo, Medio, Alto, Extremo)." } } },
@@ -358,6 +363,7 @@ export const courseData: CourseData = {
       id: 6,
       title: "Señales de Alerta e Indicadores",
       description: "Aprender a reconocer comportamientos y operaciones que pueden indicar actividades de LA/FT.",
+      duration: "~45 min",
       submodules: [
         { id: "6-1", title: "¿Qué es una Señal de Alerta?", content: "Una señal de alerta es una circunstancia o comportamiento que se desvía de lo normal y que podría indicar una posible actividad de lavado de activos o financiación del terrorismo. Es crucial diferenciar entre una operación 'inusual' (se sale del patrón transaccional del asociado) y una 'sospechosa' (la inusualidad no tiene justificación lógica o económica).", multimedia: { audioScript: "Diferencia clave entre inusual y sospechoso. La señal de alerta es el primer indicio que debemos analizar.", videoConcept: { title: "El Termómetro del Riesgo", script: "Animación de un termómetro que sube de 'Normal' a 'Inusual' y luego a 'Sospechoso' a medida que se suman características atípicas a una transacción." } } },
         { id: "6-2", title: "Señales de Alerta Transaccionales", content: "Se refieren al movimiento de dinero. Incluyen el uso excesivo de efectivo, operaciones fraccionadas ('pitufeo') para evitar controles, transacciones a países de alto riesgo sin razón aparente, y el movimiento rápido de fondos entre diferentes productos o entidades.", multimedia: { audioScript: "Ejemplos concretos de transacciones que deben llamar nuestra atención inmediata.", videoConcept: { title: "Patrones Reveladores", script: "Visualización de flujos de dinero mostrando transacciones normales vs. transacciones con patrones de pitufeo o triangulación." } } },
@@ -376,6 +382,7 @@ export const courseData: CourseData = {
       id: 7,
       title: "Debida Diligencia",
       description: "El proceso de conocimiento del asociado/cliente, desde la vinculación hasta la actualización.",
+      duration: "~45 min",
       submodules: [
         { id: "7-1", title: "El Principio: Conozca a su Asociado (KYC)", content: "La Debida Diligencia, o Know Your Customer (KYC), es el conjunto de procedimientos para identificar a nuestros asociados y entender la naturaleza de sus actividades. No es solo un requisito de vinculación, sino un proceso continuo para prevenir que la entidad sea utilizada para fines ilícitos.", multimedia: { audioScript: "El KYC es el pilar sobre el cual se construye todo el SARLAFT. Sin conocer al asociado, estamos ciegos.", videoConcept: { title: "La Cédula del Riesgo", script: "Animación que muestra cómo se construye un perfil de asociado, añadiendo capas de información (identidad, actividad, transacciones) para crear una imagen completa." } } },
         { id: "7-2", title: "Niveles de Debida Diligencia", content: "No todos los asociados presentan el mismo riesgo. Por ello, la diligencia se aplica en diferentes niveles: Simplificada (para riesgo bajo, ej. asociados de bajo monto), Normal (el estándar para la mayoría) e Intensificada (para riesgo alto, ej. Personas Expuestas Políticamente - PEPs, o transacciones complejas).", multimedia: { audioScript: "A cada riesgo, su medida. Aprende a aplicar el nivel correcto de escrutinio para cada asociado.", videoConcept: { title: "El Zoom del Investigador", script: "Una lupa que se ajusta: un 'zoom' bajo para diligencia simplificada y un 'zoom' muy alto para la intensificada, mostrando el nivel de detalle requerido en cada caso." } } },
@@ -394,6 +401,7 @@ export const courseData: CourseData = {
       id: 8,
       title: "Reportes a la UIAF",
       description: "Cuándo y cómo reportar operaciones sospechosas (ROS) y transacciones en efectivo.",
+      duration: "~45 min",
       submodules: [
         { id: "8-1", title: "El Reporte de Operación Sospechosa (ROS)", content: "Un ROS es el informe que la entidad envía a la UIAF cuando, después de un análisis interno, concluye que una operación inusual no tiene una justificación razonable y podría estar vinculada a LA/FT. Este reporte es confidencial y es la principal herramienta para que las autoridades investiguen.", multimedia: { audioScript: "El ROS es el producto final de nuestro análisis y nuestra contribución más importante a la lucha contra el crimen.", videoConcept: { title: "De la Alerta a la Acción", script: "Un flujograma animado que muestra el camino: Operación -> Señal de Alerta -> Análisis Interno -> Conclusión de Sospecha -> Generación del ROS." } } },
         { id: "8-2", title: "La Prohibición de Preaviso ('Tipping Off')", content: "Bajo ninguna circunstancia se debe comunicar al asociado o a terceros que se ha reportado o se va a reportar una operación a la UIAF. Hacerlo es un delito, ya que alerta a los criminales y entorpece las investigaciones. El silencio y la confidencialidad son absolutos.", multimedia: { audioScript: "Recuerda la regla de oro: lo que se analiza y reporta, no se comenta con el cliente. Nunca.", videoConcept: { title: "Silencio, se Investiga", script: "Una animación de un dedo sobre unos labios pidiendo silencio, con la palabra 'CONFIDENCIAL' estampada." } } },
@@ -412,6 +420,7 @@ export const courseData: CourseData = {
       id: 9,
       title: "Sanciones y Consecuencias",
       description: "El costo del incumplimiento: sanciones administrativas, penales y el impacto reputacional.",
+      duration: "~45 min",
       submodules: [
         { id: "9-1", title: "Sanciones Administrativas", content: "La Superintendencia de la Economía Solidaria es la encargada de vigilar el cumplimiento del SARLAFT. En caso de fallas, puede imponer sanciones que van desde multas millonarias a la entidad y a los administradores, hasta la remoción de directivos o incluso la toma de posesión de la entidad.", multimedia: { audioScript: "Incumplir SARLAFT tiene un costo directo. Las multas de la Supersolidaria pueden afectar seriamente la viabilidad de la entidad.", videoConcept: { title: "El Martillo del Supervisor", script: "Animación de un martillo de juez con el logo de la Supersolidaria golpeando, y billetes y títulos de cargos saliendo volando." } } },
         { id: "9-2", title: "Responsabilidad Penal", content: "El incumplimiento puede ir más allá de una multa. Si se demuestra que un empleado o directivo, por acción u omisión, facilitó el lavado de activos, puede enfrentar un proceso penal por delitos como el lavado de activos, omisión de control o testaferrato, con penas de prisión.", multimedia: { audioScript: "Esto es serio. Una falla en SARLAFT no solo cuesta dinero, puede costar la libertad.", videoConcept: { title: "De la Oficina a la Corte", script: "Una transición de un escritorio de oficina a una sala de tribunal, mostrando que las decisiones (u omisiones) tienen consecuencias legais." } } },
@@ -430,6 +439,7 @@ export const courseData: CourseData = {
       id: 10,
       title: "Tecnologías y Herramientas",
       description: "El rol del software y la tecnología en la automatización y eficiencia del SARLAFT.",
+      duration: "~45 min",
       submodules: [
         { id: "10-1", title: "Automatización del Monitoreo", content: "Revisar miles de transacciones manualmente es imposible. El software de monitoreo transaccional es una herramienta esencial que aplica reglas y modelos de comportamiento para analizar operaciones en tiempo real y generar alertas automáticas sobre aquellas que se desvían de la normalidad, permitiendo al equipo de cumplimiento enfocarse en el análisis.", multimedia: { audioScript: "La tecnología es nuestro mejor aliado. Permite hacer en segundos lo que a un humano le tomaría años.", videoConcept: { title: "El Vigilante Digital", script: "Animación de un flujo masivo de datos transaccionales que pasa por un 'filtro' de software, el cual resalta en rojo las transacciones sospechosas y las envía a un analista." } } },
         { id: "10-2", title: "Verificación en Listas Restrictivas", content: "Las entidades deben asegurarse de no tener relaciones con personas o empresas incluidas en listas de sanción nacionales e internacionales (como las de la ONU o la OFAC de EE.UU.). Las herramientas tecnológicas automatizan el cruce de las bases de datos de asociados y terceros contra estas listas de forma periódica y en tiempo real.", multimedia: { audioScript: "Verificar en listas es una obligación. La tecnología lo hace posible de forma eficiente y segura.", videoConcept: { title: "El Escáner de Listas", script: "Una base de datos de asociados pasa por un escáner que la compara con varias listas restrictivas internacionales, emitiendo una alerta cuando encuentra una coincidencia." } } },
