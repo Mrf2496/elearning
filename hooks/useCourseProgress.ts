@@ -94,13 +94,34 @@ export const useCourseProgress = () => {
 
     const module = courseData.modules.find(m => m.id === moduleId);
     if(moduleId === 11) return isAlreadyMarkedComplete; // Case studies are handled differently
-    if (!module || module.submodules.length === 0) return isAlreadyMarkedComplete;
+    if (!module) return isAlreadyMarkedComplete;
     
-    const allSubmodulesCompleted = module.submodules.every(sm => completedSubmodules.has(sm.id));
-    if (allSubmodulesCompleted && !isAlreadyMarkedComplete) {
+    const completableItems: string[] = module.submodules.map(sm => sm.id);
+
+    if (module.slides && module.slides.length > 0) {
+        completableItems.push(`${module.id}-slides`);
+    }
+
+    if (module.interactiveGameIdeas && module.interactiveGameIdeas.length > 0) {
+        module.interactiveGameIdeas.forEach((_game, index) => {
+            completableItems.push(`${module.id}-game-${index}`);
+        });
+    }
+    
+    if (module.oai) {
+        completableItems.push(`${module.id}-oai`);
+    }
+    
+    if (completableItems.length === 0) {
+        return isAlreadyMarkedComplete;
+    }
+
+    const allItemsCompleted = completableItems.every(id => completedSubmodules.has(id));
+
+    if (allItemsCompleted && !isAlreadyMarkedComplete) {
       completeModule(moduleId);
     }
-    return allSubmodulesCompleted;
+    return allItemsCompleted;
   }, [completedSubmodules, completedModules, completeModule]);
 
   const getCourseProgress = useCallback((): number => {
@@ -123,7 +144,7 @@ export const useCourseProgress = () => {
         return completedModules.has(11) ? 100 : 0;
     }
     const module = courseData.modules.find(m => m.id === moduleId);
-    if (!module || module.submodules.length === 0) {
+    if (!module) {
         return completedModules.has(moduleId) ? 100 : 0;
     }
     

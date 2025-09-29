@@ -62,7 +62,6 @@ const MainApp: React.FC = () => {
         return selectedModule ? (
           <ModuleView 
             module={selectedModule} 
-            onModuleComplete={() => progressHook.completeModule(selectedModule.id)}
             onNavigate={handleNavigate}
             onNextModule={handleNextModule}
             onPreviousModule={handlePreviousModule}

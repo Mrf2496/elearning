@@ -15,7 +15,6 @@ import ChevronRightIcon from './icons/ChevronRightIcon';
 
 interface ModuleViewProps {
   module: Module;
-  onModuleComplete: () => void;
   onNavigate: (view: View) => void;
   onNextModule: () => void;
   onPreviousModule: () => void;
@@ -27,24 +26,44 @@ const MIN_SUBMODULE_VIEW_TIME_SECONDS = 15;
 
 const ModuleView: React.FC<ModuleViewProps> = ({ 
   module, 
-  onModuleComplete,
   onNavigate,
   onNextModule,
   onPreviousModule,
   isFirstModule,
   isLastModule
 }) => {
-  const [selectedSubmoduleId, setSelectedSubmoduleId] = useState<string | null>(module.submodules[0]?.id || null);
-  const [activeMainTab, setActiveMainTab] = useState<'content' | 'slides' | 'games' | 'oai'>('content');
+  const progressContext = useContext(CourseProgressContext);
+
+  const navigableItems = useMemo(() => {
+    const items: { type: string; id: string; title: string; }[] = module.submodules.map(sm => ({ 
+        type: 'submodule', id: sm.id, title: sm.title 
+    }));
+    
+    if (module.slides && module.slides.length > 0) {
+        items.push({ type: 'slides', id: `${module.id}-slides`, title: 'Diapositivas Clave' });
+    }
+
+    if (module.interactiveGameIdeas && module.interactiveGameIdeas.length > 0) {
+        module.interactiveGameIdeas.forEach((game, index) => {
+            items.push({ type: 'game', id: `${module.id}-game-${index}`, title: game.title });
+        });
+    }
+    
+    if (module.oai) {
+        items.push({ type: 'oai', id: `${module.id}-oai`, title: 'Objeto de Aprendizaje' });
+    }
+    
+    return items;
+  }, [module]);
+
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(navigableItems[0]?.id || null);
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({});
   const [videoUrls, setVideoUrls] = useState<Record<string, string>>({});
-  const progressContext = useContext(CourseProgressContext);
   const timerRef = useRef<number | null>(null);
 
   // Reset states on module change
   useEffect(() => {
-    setSelectedSubmoduleId(module.submodules[0]?.id || null);
-    setActiveMainTab('content');
+    setSelectedItemId(navigableItems[0]?.id || null);
     window.scrollTo(0, 0);
 
     const loadMediaFromDB = async () => {
@@ -69,7 +88,7 @@ const ModuleView: React.FC<ModuleViewProps> = ({
     };
 
     loadMediaFromDB();
-  }, [module]);
+  }, [module, navigableItems]);
 
   const { completedSubmodules, completeSubmodule, isModuleCompleted } = progressContext || {};
 
@@ -79,63 +98,93 @@ const ModuleView: React.FC<ModuleViewProps> = ({
       timerRef.current = null;
     }
 
-    if (selectedSubmoduleId && !completedSubmodules?.has(selectedSubmoduleId) && completeSubmodule) {
+    if (!selectedItemId || !completeSubmodule || completedSubmodules?.has(selectedItemId)) {
+      return;
+    }
+    
+    const selectedItem = navigableItems.find(item => item.id === selectedItemId);
+
+    if (selectedItem?.type === 'submodule') {
       let timeElapsed = 0;
       timerRef.current = window.setInterval(() => {
         timeElapsed += 1;
         if (timeElapsed >= MIN_SUBMODULE_VIEW_TIME_SECONDS) {
-          completeSubmodule(selectedSubmoduleId);
+          completeSubmodule(selectedItemId);
           if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
           }
         }
       }, 1000);
+    } else if (selectedItem) {
+      // For slides, games, OAI, complete immediately on view
+      completeSubmodule(selectedItemId);
     }
+
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
     };
-  }, [selectedSubmoduleId, completedSubmodules, completeSubmodule]);
+  }, [selectedItemId, navigableItems, completedSubmodules, completeSubmodule]);
 
-  const submoduleIds = useMemo(() => module.submodules.map(sm => sm.id), [module]);
-  const currentSubmoduleIndex = useMemo(() => submoduleIds.indexOf(selectedSubmoduleId || ''), [selectedSubmoduleId, submoduleIds]);
+  const currentItemIndex = useMemo(() => navigableItems.findIndex(item => item.id === selectedItemId), [selectedItemId, navigableItems]);
 
-  const handleSelectSubmodule = (submoduleId: string) => {
-    setSelectedSubmoduleId(submoduleId);
+  const handleSelectItem = (itemId: string) => {
+    setSelectedItemId(itemId);
   };
   
-  const handleNextSubmodule = () => {
-    if (currentSubmoduleIndex > -1 && currentSubmoduleIndex < submoduleIds.length - 1) {
-      const nextSubmoduleId = submoduleIds[currentSubmoduleIndex + 1];
-      setSelectedSubmoduleId(nextSubmoduleId);
+  const handleNextItem = () => {
+    if (currentItemIndex > -1 && currentItemIndex < navigableItems.length - 1) {
+      const nextItemId = navigableItems[currentItemIndex + 1].id;
+      setSelectedItemId(nextItemId);
     }
   };
 
-  const handlePreviousSubmodule = () => {
-    if (currentSubmoduleIndex > 0) {
-      const prevSubmoduleId = submoduleIds[currentSubmoduleIndex - 1];
-      setSelectedSubmoduleId(prevSubmoduleId);
+  const handlePreviousItem = () => {
+    if (currentItemIndex > 0) {
+      const prevItemId = navigableItems[currentItemIndex - 1].id;
+      setSelectedItemId(prevItemId);
     }
   };
 
   if (!progressContext) return null;
 
-  const selectedSubmodule = module.submodules.find(sm => sm.id === selectedSubmoduleId);
+  const selectedItem = navigableItems.find(item => item.id === selectedItemId);
   const isEven = module.id % 2 === 0;
 
-  const mainTabs = [
-    { id: 'content', label: 'Contenido del Tema' },
-    { id: 'slides', label: 'Diapositivas Clave' },
-  ];
-  if (module.interactiveGameIdeas && module.interactiveGameIdeas.length > 0) {
-    mainTabs.push({ id: 'games', label: 'Juegos Interactivos' });
-  }
-  if (module.oai) {
-    mainTabs.push({ id: 'oai', label: 'Objeto de Aprendizaje' });
-  }
+  const renderRightPanelContent = () => {
+    if (!selectedItem) return <Card><p>Selecciona un tema para comenzar.</p></Card>;
+
+    switch (selectedItem.type) {
+      case 'submodule':
+        const submodule = module.submodules.find(sm => sm.id === selectedItem.id);
+        return submodule ? (
+          <SubmoduleContent 
+            submodule={submodule} 
+            audioUrl={audioUrls[submodule.id]}
+            videoUrl={videoUrls[submodule.id]}
+          />
+        ) : null;
+
+      case 'slides':
+        return <SlideViewer slides={module.slides} />;
+
+      case 'game':
+        const gameIndex = parseInt(selectedItem.id.split('-game-')[1], 10);
+        const gameData = module.interactiveGameIdeas?.[gameIndex];
+        return gameData ? <InteractiveGame game={gameData} /> : null;
+
+      case 'oai':
+        if (module.oai === 'uiaf_flow') return <UiafFlowOAI />;
+        if (module.oai === 'risk_factor_sorter') return <RiskFactorSorterOAI />;
+        return null;
+
+      default:
+        return <Card><p>Contenido no encontrado.</p></Card>;
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -155,18 +204,18 @@ const ModuleView: React.FC<ModuleViewProps> = ({
           <Card>
             <h3 className="text-xl font-semibold mb-4 border-b pb-2">Temas del Módulo</h3>
             <ul className="space-y-2">
-              {module.submodules.map((submodule) => (
-                <li key={submodule.id}>
+              {navigableItems.map((item) => (
+                <li key={item.id}>
                   <button
-                    onClick={() => handleSelectSubmodule(submodule.id)}
+                    onClick={() => handleSelectItem(item.id)}
                     className={`w-full text-left p-3 rounded-lg flex items-center justify-between transition-colors ${
-                      selectedSubmoduleId === submodule.id
+                      selectedItemId === item.id
                         ? (isEven ? 'bg-sky-100 font-semibold text-sky-700' : 'bg-orange-100 font-semibold text-orange-700')
                         : 'text-slate-700 hover:bg-slate-100'
                     }`}
                   >
-                    <span>{submodule.title}</span>
-                    {completedSubmodules.has(submodule.id) && <CheckCircleIcon className="w-5 h-5 text-green-500" />}
+                    <span className="text-sm">{item.title}</span>
+                    {completedSubmodules.has(item.id) && <CheckCircleIcon className="w-5 h-5 text-green-500 flex-shrink-0 ml-2" />}
                   </button>
                 </li>
               ))}
@@ -175,68 +224,21 @@ const ModuleView: React.FC<ModuleViewProps> = ({
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white p-2 rounded-lg shadow-sm">
-            <nav className="flex space-x-2" aria-label="Main Tabs">
-              {mainTabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveMainTab(tab.id as any)}
-                  className={`flex-1 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors rounded-md ${
-                    activeMainTab === tab.id
-                      ? 'bg-sky-100 border-sky-500 text-sky-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
+          <div className="animate-fade-in">
+            {renderRightPanelContent()}
           </div>
           
-          <div>
-            {activeMainTab === 'content' && (
-              <div className="space-y-4 animate-fade-in">
-                {selectedSubmodule ? (
-                  <SubmoduleContent 
-                    submodule={selectedSubmodule} 
-                    audioUrl={audioUrls[selectedSubmodule.id]}
-                    videoUrl={videoUrls[selectedSubmodule.id]}
-                  />
-                ) : (
-                  <Card><p>Selecciona un tema para comenzar.</p></Card>
-                )}
-                <Card>
-                    <div className="flex justify-between items-center">
-                        <Button onClick={handlePreviousSubmodule} disabled={currentSubmoduleIndex <= 0} variant="secondary" className="flex items-center space-x-2">
-                            <ChevronLeftIcon className="w-4 h-4" /> <span>Tema Anterior</span>
-                        </Button>
-                        <span className="text-sm font-medium text-gray-500">{currentSubmoduleIndex + 1} / {submoduleIds.length}</span>
-                        <Button onClick={handleNextSubmodule} disabled={currentSubmoduleIndex >= submoduleIds.length - 1} variant="secondary" className="flex items-center space-x-2">
-                            <span>Siguiente Tema</span> <ChevronRightIcon className="w-4 h-4" />
-                        </Button>
-                    </div>
-                </Card>
+          <Card>
+              <div className="flex justify-between items-center">
+                  <Button onClick={handlePreviousItem} disabled={currentItemIndex <= 0} variant="secondary" className="flex items-center space-x-2">
+                      <ChevronLeftIcon className="w-4 h-4" /> <span>Anterior</span>
+                  </Button>
+                  <span className="text-sm font-medium text-gray-500">{currentItemIndex + 1} / {navigableItems.length}</span>
+                  <Button onClick={handleNextItem} disabled={currentItemIndex >= navigableItems.length - 1} variant="secondary" className="flex items-center space-x-2">
+                      <span>Siguiente</span> <ChevronRightIcon className="w-4 h-4" />
+                  </Button>
               </div>
-            )}
-            {activeMainTab === 'slides' && (
-              <div className="animate-fade-in">
-                <SlideViewer slides={module.slides} />
-              </div>
-            )}
-            {activeMainTab === 'games' && (
-              <div className="space-y-6 animate-fade-in">
-                {module.interactiveGameIdeas && module.interactiveGameIdeas.map((game, index) => (
-                  <InteractiveGame key={index} game={game} />
-                ))}
-              </div>
-            )}
-            {activeMainTab === 'oai' && (
-              <div className="animate-fade-in">
-                {module.oai === 'uiaf_flow' && <UiafFlowOAI />}
-                {module.oai === 'risk_factor_sorter' && <RiskFactorSorterOAI />}
-              </div>
-            )}
-          </div>
+          </Card>
         </div>
       </div>
       <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
