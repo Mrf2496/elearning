@@ -41,8 +41,16 @@ export interface DecisionScenario {
   }[];
 }
 
+export interface TimedQuizQuestion {
+  id: number;
+  question: string;
+  options: string[];
+  correctOptionIndex: number;
+  feedback: string;
+}
+
 export interface InteractiveGame {
-  type: 'match' | 'drag_drop' | 'quiz' | 'memory' | 'word_search' | 'escape_room' | 'crossword' | 'decision_simulator';
+  type: 'match' | 'drag_drop' | 'quiz' | 'memory' | 'word_search' | 'escape_room' | 'crossword' | 'decision_simulator' | 'timed_quiz';
   title: string;
   instruction: string;
   pairs?: { term: string; definition: string }[];
@@ -62,6 +70,8 @@ export interface InteractiveGame {
       direction: 'across' | 'down';
   }[];
   decisionScenarios?: DecisionScenario[];
+  timedQuizQuestions?: TimedQuizQuestion[];
+  timeLimit?: number;
 }
 
 export interface Module {

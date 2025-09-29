@@ -137,6 +137,51 @@ const decisionSimulatorGame: InteractiveGame = {
   ]
 };
 
+const timedQuizGame: InteractiveGame = {
+  type: 'timed_quiz',
+  title: "Rally Tecnológico: ¡Contra el Reloj!",
+  instruction: "Responde 3 preguntas sobre herramientas tecnológicas SARLAFT antes de que el tiempo se acabe. ¡Cada segundo cuenta!",
+  timeLimit: 15,
+  timedQuizQuestions: [
+    {
+      id: 1,
+      question: "Un software de monitoreo transaccional es crucial porque...",
+      options: [
+        "Reemplaza completamente al analista humano.",
+        "Analiza miles de operaciones en tiempo real para detectar patrones inusuales.",
+        "Solo sirve para generar reportes para la gerencia.",
+        "Bloquea automáticamente a todos los clientes nuevos."
+      ],
+      correctOptionIndex: 1,
+      feedback: "Incorrecto. Su poder radica en analizar grandes volúmenes de datos para encontrar anomalías que un humano no podría, pero no reemplaza el juicio del analista."
+    },
+    {
+      id: 2,
+      question: "¿Cuál es el propósito principal de cruzar automáticamente la base de datos de asociados contra listas restrictivas (ONU, OFAC, etc.)?",
+      options: [
+        "Aumentar la cantidad de papeleo para los clientes.",
+        "Cumplir un requisito, aunque rara vez encuentra algo.",
+        "Asegurar que la entidad no tenga relaciones con personas o empresas sancionadas por terrorismo, narcotráfico, etc.",
+        "Verificar la dirección de residencia de los asociados."
+      ],
+      correctOptionIndex: 2,
+      feedback: "Incorrecto. Es una obligación crítica para evitar que la entidad se relacione con actores vinculados a delitos graves a nivel nacional e internacional."
+    },
+    {
+      id: 3,
+      question: "La gran ventaja de la Inteligencia Artificial (IA) en SARLAFT sobre los sistemas de reglas tradicionales es que puede...",
+      options: [
+        "Aprobar créditos de forma más rápida.",
+        "Enviar los reportes a la UIAF sin intervención humana.",
+        "Aprender patrones de comportamiento complejos y detectar anomalías sutiles, reduciendo falsos positivos.",
+        "Chatear con los clientes para resolver sus dudas."
+      ],
+      correctOptionIndex: 2,
+      feedback: "Incorrecto. La IA va más allá de reglas fijas. Aprende del comportamiento 'normal' para identificar desviaciones complejas y sutiles, haciendo la detección más inteligente y eficiente."
+    }
+  ]
+};
+
 const interactiveGameIdeas: InteractiveGame[] = [
   {
     type: 'match',
@@ -212,6 +257,7 @@ const interactiveGameIdeas: InteractiveGame[] = [
   crosswordGame,
   reportMatchGame,
   decisionSimulatorGame,
+  timedQuizGame,
 ];
 
 
@@ -396,7 +442,7 @@ export const courseData: CourseData = {
         { title: "Falsos Positivos vs. Falsos Negativos", points: ["Falso Positivo: Alerta que no es sospechosa", "Falso Negativo: Operación sospechosa que no genera alerta (¡El peor!)", "La tecnología busca reducir ambos"], imageConcept: "Una balanza tratando de equilibrar los dos tipos de errores." },
         { title: "El Rol del Analista Humano", points: ["La tecnología genera alertas, no conclusiones", "El juicio experto es insustituible", "El analista investiga, documenta y decide si reportar"], imageConcept: "Una persona analizando los datos que le presenta una pantalla de alta tecnología." }
       ],
-      interactiveGameIdeas: [interactiveGameIdeas[6]],
+      interactiveGameIdeas: [interactiveGameIdeas[6], interactiveGameIdeas[10]],
     },
   ],
   caseStudies: [

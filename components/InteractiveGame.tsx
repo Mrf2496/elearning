@@ -995,6 +995,149 @@ const DecisionSimulatorGame: React.FC<InteractiveGameProps> = ({ game }) => {
     );
 };
 
+const TimedQuizGame: React.FC<InteractiveGameProps> = ({ game }) => {
+    const questions = useMemo(() => game.timedQuizQuestions || [], [game.timedQuizQuestions]);
+    const timeLimit = useMemo(() => game.timeLimit || 15, [game.timeLimit]);
+
+    const [gameState, setGameState] = useState<'intro' | 'playing' | 'feedback' | 'finished'>('intro');
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(timeLimit);
+    const [score, setScore] = useState(0);
+    const [feedback, setFeedback] = useState('');
+    const timerRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (gameState === 'playing') {
+            timerRef.current = window.setInterval(() => {
+                setTimeLeft(prev => prev - 1);
+            }, 1000);
+        } else {
+            if (timerRef.current) clearInterval(timerRef.current);
+        }
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [gameState]);
+
+    useEffect(() => {
+        if (timeLeft <= 0 && gameState === 'playing') {
+            if (timerRef.current) clearInterval(timerRef.current);
+            setFeedback("¡Se acabó el tiempo! La respuesta correcta era: " + questions[currentQuestionIndex].options[questions[currentQuestionIndex].correctOptionIndex]);
+            setGameState('feedback');
+        }
+    }, [timeLeft, gameState, questions, currentQuestionIndex]);
+
+    const handleAnswer = (selectedIndex: number) => {
+        if (gameState !== 'playing') return;
+        if (timerRef.current) clearInterval(timerRef.current);
+
+        const currentQuestion = questions[currentQuestionIndex];
+        if (selectedIndex === currentQuestion.correctOptionIndex) {
+            setScore(prev => prev + 1);
+            setFeedback('');
+            goToNext();
+        } else {
+            setFeedback(currentQuestion.feedback);
+            setGameState('feedback');
+        }
+    };
+
+    const goToNext = () => {
+        if (currentQuestionIndex < questions.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+            setTimeLeft(timeLimit);
+            setGameState('playing');
+            setFeedback('');
+        } else {
+            setGameState('finished');
+        }
+    };
+
+    const startGame = () => {
+        setCurrentQuestionIndex(0);
+        setScore(0);
+        setTimeLeft(timeLimit);
+        setFeedback('');
+        setGameState('playing');
+    };
+
+    const getTimerColor = () => {
+        const percentage = (timeLeft / timeLimit) * 100;
+        if (percentage > 50) return 'bg-green-500';
+        if (percentage > 25) return 'bg-yellow-500';
+        return 'bg-red-500';
+    };
+    
+    if (questions.length === 0) return null;
+
+    if (gameState === 'intro') {
+        return (
+            <Card className="text-center">
+                 <h3 className="text-xl font-semibold mb-2">{game.title}</h3>
+                 <p className="text-gray-600 my-4">{game.instruction}</p>
+                 <Button onClick={startGame}>¡Empezar!</Button>
+            </Card>
+        );
+    }
+    
+    if (gameState === 'finished') {
+        return (
+            <Card className="text-center">
+                 <h3 className="text-xl font-semibold mb-2">¡Rally Completado!</h3>
+                 <p className="text-gray-600 my-4">Tu puntaje final es:</p>
+                 <p className="text-5xl font-bold text-sky-600 my-4">{score} / {questions.length}</p>
+                 <Button onClick={startGame} variant="secondary">Jugar de Nuevo</Button>
+            </Card>
+        );
+    }
+    
+    const currentQuestion = questions[currentQuestionIndex];
+
+    return (
+        <Card>
+            <h3 className="text-xl font-semibold mb-2">{game.title}</h3>
+            
+            <div className="my-4">
+                <div className="w-full bg-gray-200 rounded-full h-4">
+                    <div
+                        className={`h-4 rounded-full transition-all duration-1000 linear ${getTimerColor()}`}
+                        style={{ width: `${(timeLeft / timeLimit) * 100}%` }}
+                    ></div>
+                </div>
+                <p className="text-center text-sm font-bold mt-1 text-gray-600">{timeLeft} segundos restantes</p>
+            </div>
+            
+            <div className="p-4 bg-gray-50 rounded-lg">
+                <p className="font-semibold text-gray-800 text-lg">{currentQuestion.question}</p>
+            </div>
+
+            <div className="mt-4 space-y-3">
+                {currentQuestion.options.map((option, index) => (
+                    <Button
+                        key={index}
+                        onClick={() => handleAnswer(index)}
+                        variant="secondary"
+                        className="w-full text-left p-3 !text-base"
+                        disabled={gameState === 'feedback'}
+                    >
+                       {option}
+                    </Button>
+                ))}
+            </div>
+
+            {gameState === 'feedback' && (
+                <div className="mt-6 p-4 rounded-lg bg-red-50 border-l-4 border-red-500 animate-fade-in">
+                    <p className="font-bold text-red-700">Retroalimentación:</p>
+                    <p className="text-red-600">{feedback}</p>
+                    <div className="text-right mt-2">
+                        <Button onClick={goToNext}>Continuar</Button>
+                    </div>
+                </div>
+            )}
+        </Card>
+    );
+};
+
 
 const InteractiveGame: React.FC<InteractiveGameProps> = ({ game }) => {
   switch (game.type) {
@@ -1012,6 +1155,8 @@ const InteractiveGame: React.FC<InteractiveGameProps> = ({ game }) => {
         return <CrosswordGame game={game} />;
     case 'decision_simulator':
         return <DecisionSimulatorGame game={game} />;
+    case 'timed_quiz':
+        return <TimedQuizGame game={game} />;
     case 'quiz': // Fallthrough for unimplemented
     default:
       return (
