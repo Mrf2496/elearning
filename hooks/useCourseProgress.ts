@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { courseData } from '../constants/courseData';
 import { useAuth } from './useAuth';
 
-const MODULE_COUNT = courseData.modules.length;
+const SUBMODULES_WITH_VIDEO = [
+    '1-1', '1-2', '1-3', '2-1', '2-2', '2-3', '3-1', '4-1', '5-1', '6-1', '7-1', '8-1', '9-1', '10-1'
+];
 
 export const useCourseProgress = () => {
   const { currentUser } = useAuth();
@@ -92,11 +94,25 @@ export const useCourseProgress = () => {
     const isAlreadyMarkedComplete = completedModules.has(moduleId);
     if(isAlreadyMarkedComplete) return true;
 
+    if (moduleId === 11) { // Case studies module
+        const allCasesCompleted = courseData.caseStudies.every(cs => completedSubmodules.has(`case-${cs.id}`));
+        if (allCasesCompleted) {
+            completeModule(11);
+        }
+        return allCasesCompleted;
+    }
+
     const module = courseData.modules.find(m => m.id === moduleId);
-    if(moduleId === 11) return isAlreadyMarkedComplete; // Case studies are handled differently
     if (!module) return isAlreadyMarkedComplete;
     
-    const completableItems: string[] = module.submodules.map(sm => sm.id);
+    const completableItems: string[] = [];
+    module.submodules.forEach(sm => {
+        completableItems.push(sm.id);
+        completableItems.push(`${sm.id}-audio`);
+        if (SUBMODULES_WITH_VIDEO.includes(sm.id)) {
+            completableItems.push(`${sm.id}-video`);
+        }
+    });
 
     if (module.slides && module.slides.length > 0) {
         completableItems.push(`${module.id}-slides`);
@@ -124,34 +140,79 @@ export const useCourseProgress = () => {
     return allItemsCompleted;
   }, [completedSubmodules, completedModules, completeModule]);
 
-  const getCourseProgress = useCallback((): number => {
-    let completedCount = 0;
-    
-    courseData.modules.forEach(m => {
-        if(isModuleCompleted(m.id)) completedCount++;
+  const allCourseItems = useMemo(() => {
+    const items: string[] = [];
+    courseData.modules.forEach(module => {
+        module.submodules.forEach(sm => {
+            items.push(sm.id);
+            items.push(`${sm.id}-audio`);
+            if (SUBMODULES_WITH_VIDEO.includes(sm.id)) {
+                items.push(`${sm.id}-video`);
+            }
+        });
+        if (module.slides?.length) {
+            items.push(`${module.id}-slides`);
+        }
+        if (module.interactiveGameIdeas?.length) {
+            module.interactiveGameIdeas.forEach((_, index) => {
+                items.push(`${module.id}-game-${index}`);
+            });
+        }
+        if (module.oai) {
+            items.push(`${module.id}-oai`);
+        }
     });
 
-    if (completedModules.has(11)) { // Special ID for case studies
-        completedCount++;
-    }
-    const totalCompletableItems = courseData.modules.length + 1; // Modules + Case Studies
+    courseData.caseStudies.forEach(cs => {
+        items.push(`case-${cs.id}`);
+    });
+    return items;
+  }, []);
 
-    return totalCompletableItems > 0 ? (completedCount / totalCompletableItems) * 100 : 0;
-  }, [isModuleCompleted, completedModules]);
+  const getCourseProgress = useCallback((): number => {
+      if (allCourseItems.length === 0) return 0;
+      
+      const completedCount = allCourseItems.filter(id => completedSubmodules.has(id)).length;
+      
+      return (completedCount / allCourseItems.length) * 100;
+  }, [completedSubmodules, allCourseItems]);
 
   const getModuleProgress = useCallback((moduleId: number): number => {
     if (moduleId === 11) { // Special case for Case Studies
-        return completedModules.has(11) ? 100 : 0;
+        const completedCases = courseData.caseStudies.filter(cs => completedSubmodules.has(`case-${cs.id}`)).length;
+        return courseData.caseStudies.length > 0 ? (completedCases / courseData.caseStudies.length) * 100 : 0;
     }
     const module = courseData.modules.find(m => m.id === moduleId);
     if (!module) {
         return completedModules.has(moduleId) ? 100 : 0;
     }
     
-    const completedInModule = module.submodules.filter(sm => completedSubmodules.has(sm.id)).length;
-    const totalInModule = module.submodules.length;
-    
-    return totalInModule > 0 ? (completedInModule / totalInModule) * 100 : 0;
+    const moduleItems: string[] = [];
+    module.submodules.forEach(sm => {
+        moduleItems.push(sm.id);
+        moduleItems.push(`${sm.id}-audio`);
+        if (SUBMODULES_WITH_VIDEO.includes(sm.id)) {
+            moduleItems.push(`${sm.id}-video`);
+        }
+    });
+    if (module.slides?.length) {
+        moduleItems.push(`${module.id}-slides`);
+    }
+    if (module.interactiveGameIdeas?.length) {
+        module.interactiveGameIdeas.forEach((_, index) => {
+            moduleItems.push(`${module.id}-game-${index}`);
+        });
+    }
+    if (module.oai) {
+        moduleItems.push(`${module.id}-oai`);
+    }
+
+    if (moduleItems.length === 0) {
+      return completedModules.has(moduleId) ? 100 : 0;
+    }
+
+    const completedInModule = moduleItems.filter(id => completedSubmodules.has(id)).length;
+    return (completedInModule / moduleItems.length) * 100;
   }, [completedSubmodules, completedModules]);
 
 

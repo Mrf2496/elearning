@@ -21,7 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => {
   const { quizPassed, getCourseProgress } = progressContext;
   
   const courseProgress = getCourseProgress();
-  const allModulesAndCasesCompleted = courseProgress >= 100;
+  const isQuizUnlocked = courseProgress >= 90;
 
   const navItemMap: Record<string, View> = {
     'Panel Principal': View.Dashboard,
@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => {
     { label: 'Panel Principal', icon: HomeIcon, view: View.Dashboard },
     { label: 'Módulos', icon: BookOpenIcon, view: View.Dashboard },
     { label: 'Casos Prácticos', icon: FileTextIcon, view: View.CaseStudies },
-    { label: 'Evaluación Final', icon: QuestionMarkCircleIcon, view: View.Quiz, locked: !allModulesAndCasesCompleted },
+    { label: 'Evaluación Final', icon: QuestionMarkCircleIcon, view: View.Quiz, locked: !isQuizUnlocked },
     { label: 'Certificado', icon: AwardIcon, view: View.Certificate, locked: !quizPassed },
   ];
 

@@ -4,11 +4,7 @@ import Card from './common/Card';
 import Button from './common/Button';
 import { CourseProgressContext } from '../context/CourseProgressContext';
 
-interface CaseStudiesViewProps {
-  onComplete: () => void;
-}
-
-const CaseStudiesView: React.FC<CaseStudiesViewProps> = ({ onComplete }) => {
+const CaseStudiesView: React.FC = () => {
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -25,12 +21,12 @@ const CaseStudiesView: React.FC<CaseStudiesViewProps> = ({ onComplete }) => {
   };
   
   const handleNext = () => {
+    progressContext?.completeSubmodule(`case-${currentCase.id}`);
     if (currentCaseIndex < courseData.caseStudies.length - 1) {
       setCurrentCaseIndex(prev => prev + 1);
       setSelectedOption(null);
       setShowExplanation(false);
     } else {
-      progressContext?.completeModule(11);
       alert("¡Has completado todos los casos prácticos!");
     }
   };

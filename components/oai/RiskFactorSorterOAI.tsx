@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../common/Card';
 import UserGroupIcon from '../icons/UserGroupIcon';
 import CubeIcon from '../icons/CubeIcon';
@@ -35,7 +34,11 @@ const colorClasses: Record<string, { bg: string, border: string, text: string, t
     red: { bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-600', textBold: 'text-red-700', bgItem: 'bg-red-100', textItem: 'text-red-900' },
 };
 
-const RiskFactorSorterOAI: React.FC = () => {
+interface RiskFactorSorterOAIProps {
+  onComplete: () => void;
+}
+
+const RiskFactorSorterOAI: React.FC<RiskFactorSorterOAIProps> = ({ onComplete }) => {
   const [unclassified, setUnclassified] = useState<Scenario[]>(() => shuffleArray(initialScenarios));
   const [classified, setClassified] = useState<Record<Category, Scenario[]>>({
     Clientes: [],
@@ -52,6 +55,14 @@ const RiskFactorSorterOAI: React.FC = () => {
     { name: 'Canales', icon: ShareIcon, color: 'green' },
     { name: 'Jurisdicciones', icon: GlobeAltIcon, color: 'red' },
   ];
+  
+  const allCompleted = unclassified.length === 0;
+
+  useEffect(() => {
+    if (allCompleted) {
+      onComplete();
+    }
+  }, [allCompleted, onComplete]);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: number) => {
     e.dataTransfer.effectAllowed = 'move';
@@ -87,8 +98,6 @@ const RiskFactorSorterOAI: React.FC = () => {
       setUnclassified(shuffleArray(initialScenarios));
       setClassified({ Clientes: [], Productos: [], Canales: [], Jurisdicciones: [] });
   };
-  
-  const allCompleted = unclassified.length === 0;
 
   return (
     <Card>

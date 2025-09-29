@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../common/Card';
 import BuildingOfficeIcon from '../icons/BuildingOfficeIcon';
 import DocumentTextIcon from '../icons/DocumentTextIcon';
@@ -50,8 +50,24 @@ const flowSteps = [
   },
 ];
 
-const UiafFlowOAI: React.FC = () => {
+interface UiafFlowOAIProps {
+  onComplete: () => void;
+}
+
+const UiafFlowOAI: React.FC<UiafFlowOAIProps> = ({ onComplete }) => {
   const [activeStep, setActiveStep] = useState<number | null>(null);
+  const [viewedSteps, setViewedSteps] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (viewedSteps.size === flowSteps.length) {
+      onComplete();
+    }
+  }, [viewedSteps, onComplete]);
+
+  const handleStepClick = (stepId: number) => {
+    setActiveStep(stepId);
+    setViewedSteps(prev => new Set(prev).add(stepId));
+  };
 
   const selectedStepData = flowSteps.find(step => step.id === activeStep);
 
@@ -64,9 +80,10 @@ const UiafFlowOAI: React.FC = () => {
         {flowSteps.map((step, index) => (
           <React.Fragment key={step.id}>
             <button
-              onClick={() => setActiveStep(step.id)}
+              onClick={() => handleStepClick(step.id)}
               className={`flex flex-col items-center text-center p-3 rounded-lg border-2 transition-all w-32 h-32 justify-center
-                ${activeStep === step.id ? `${step.bgColor} border-current ${step.color} ring-2 ring-current` : 'bg-gray-50 hover:bg-gray-100 border-gray-200'}`}
+                ${activeStep === step.id ? `${step.bgColor} border-current ${step.color} ring-2 ring-current` : 'bg-gray-50 hover:bg-gray-100 border-gray-200'}
+              `}
             >
               <step.icon className={`w-8 h-8 mb-1 ${step.color}`} />
               <span className="text-xs font-semibold text-gray-700">{step.title}</span>

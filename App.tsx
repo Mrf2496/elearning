@@ -70,7 +70,7 @@ const MainApp: React.FC = () => {
           />
         ) : <CourseDashboard onSelectModule={handleSelectModule} />;
       case View.CaseStudies:
-        return <CaseStudiesView onComplete={() => progressHook.completeModule(11)} />;
+        return <CaseStudiesView />;
       case View.Quiz:
         return <FinalQuiz />;
       case View.Certificate:

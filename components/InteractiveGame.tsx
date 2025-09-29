@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { InteractiveGame as GameType } from '../types';
 import Card from './common/Card';
 import Button from './common/Button';
@@ -18,9 +17,10 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 interface InteractiveGameProps {
   game: GameType;
+  onComplete: () => void;
 }
 
-const MatchGame: React.FC<InteractiveGameProps> = ({ game }) => {
+const MatchGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => {
   const [terms, setTerms] = useState<string[]>([]);
   const [definitions, setDefinitions] = useState<string[]>([]);
   const [selectedTerm, setSelectedTerm] = useState<string | null>(null);
@@ -40,6 +40,14 @@ const MatchGame: React.FC<InteractiveGameProps> = ({ game }) => {
       setIncorrectMatch(null);
     }
   }, [originalPairs]);
+  
+  const allMatched = useMemo(() => correctMatches.size === originalPairs.length, [correctMatches, originalPairs]);
+
+  useEffect(() => {
+    if (allMatched && originalPairs.length > 0) {
+      onComplete();
+    }
+  }, [allMatched, originalPairs.length, onComplete]);
 
   const handleTermClick = (term: string) => {
     setSelectedTerm(term);
@@ -65,7 +73,6 @@ const MatchGame: React.FC<InteractiveGameProps> = ({ game }) => {
     }
   };
   
-  const allMatched = correctMatches.size === originalPairs.length;
   if (!game.pairs) return null;
 
   return (
@@ -133,7 +140,7 @@ const MatchGame: React.FC<InteractiveGameProps> = ({ game }) => {
   )
 }
 
-const DragDropGame: React.FC<InteractiveGameProps> = ({ game }) => {
+const DragDropGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => {
   const [items, setItems] = useState<string[]>([]);
   const [gameState, setGameState] = useState<'playing' | 'correct' | 'incorrect'>('playing');
   const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
@@ -146,6 +153,12 @@ const DragDropGame: React.FC<InteractiveGameProps> = ({ game }) => {
       setGameState('playing');
     }
   }, [originalItems]);
+  
+  useEffect(() => {
+    if (gameState === 'correct') {
+      onComplete();
+    }
+  }, [gameState, onComplete]);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
     e.dataTransfer.effectAllowed = "move";
@@ -222,7 +235,7 @@ const DragDropGame: React.FC<InteractiveGameProps> = ({ game }) => {
   );
 }
 
-const MemoryGame: React.FC<InteractiveGameProps> = ({ game }) => {
+const MemoryGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => {
     const [currentSetIndex, setCurrentSetIndex] = useState(0);
     const [cards, setCards] = useState<string[]>([]);
     const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
@@ -243,6 +256,15 @@ const MemoryGame: React.FC<InteractiveGameProps> = ({ game }) => {
             setIsChecking(false);
         }
     }, [currentSet]);
+    
+    const isSetCompleted = useMemo(() => matchedPairs.length > 0 && matchedPairs.length === cards.length, [matchedPairs, cards]);
+    const allSetsCompleted = useMemo(() => isSetCompleted && currentSetIndex === memorySets.length - 1, [isSetCompleted, currentSetIndex, memorySets]);
+
+    useEffect(() => {
+      if (allSetsCompleted) {
+        onComplete();
+      }
+    }, [allSetsCompleted, onComplete]);
     
     const findPairForCard = (cardValue: string): string => {
         const pair = currentSet.pairs.find(p => p.term === cardValue);
@@ -281,9 +303,6 @@ const MemoryGame: React.FC<InteractiveGameProps> = ({ game }) => {
             }
         }
     };
-
-    const isSetCompleted = matchedPairs.length > 0 && matchedPairs.length === cards.length;
-    const allSetsCompleted = isSetCompleted && currentSetIndex === memorySets.length - 1;
 
     const goToNextSet = () => {
         if (currentSetIndex < memorySets.length - 1) {
@@ -356,7 +375,7 @@ const MemoryGame: React.FC<InteractiveGameProps> = ({ game }) => {
     )
 };
 
-const WordSearchGame: React.FC<InteractiveGameProps> = ({ game }) => {
+const WordSearchGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => {
     const [grid, setGrid] = useState<string[][]>([]);
     const [foundWords, setFoundWords] = useState<Set<string>>(new Set());
     const [selection, setSelection] = useState<{ r: number, c: number }[]>([]);
@@ -365,8 +384,16 @@ const WordSearchGame: React.FC<InteractiveGameProps> = ({ game }) => {
     const words = useMemo(() => (game.words || []).map(w => w.toUpperCase().replace(/\s/g, '')), [game.words]);
     const GRID_SIZE = 15;
     const placedWords = useRef<Map<string, { r: number, c: number }[]>>(new Map());
+    
+    const allFound = useMemo(() => foundWords.size === words.length, [foundWords, words]);
 
-    const generateGrid = () => {
+    useEffect(() => {
+        if (allFound && words.length > 0) {
+            onComplete();
+        }
+    }, [allFound, words.length, onComplete]);
+
+    const generateGrid = useCallback(() => {
         const newGrid: (string | null)[][] = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
         placedWords.current.clear();
         
@@ -414,11 +441,11 @@ const WordSearchGame: React.FC<InteractiveGameProps> = ({ game }) => {
         const finalGrid = newGrid.map(row => row.map(cell => cell || 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)]));
         setGrid(finalGrid);
         setFoundWords(new Set());
-    };
+    }, [words]);
 
     useEffect(() => {
         generateGrid();
-    }, [words]);
+    }, [generateGrid]);
 
     const getLine = (start: {r: number, c: number}, end: {r: number, c: number}) => {
         const line: {r: number, c: number}[] = [];
@@ -426,7 +453,7 @@ const WordSearchGame: React.FC<InteractiveGameProps> = ({ game }) => {
         const dc = Math.sign(end.c - start.c);
         
         if (dr === 0 && dc === 0) return [start];
-        if (dr !== 0 && dc !== 0 && Math.abs(end.r-start.r) !== Math.abs(end.c-start.c)) return []; // Not a straight line
+        if (dr !== 0 && dc !== 0 && Math.abs(end.r-start.r) !== Math.abs(end.c-start.c)) return [start]; // Not a straight line, revert to start
 
         let {r, c} = start;
         while(r !== end.r + dr || c !== end.c + dc) {
@@ -464,7 +491,6 @@ const WordSearchGame: React.FC<InteractiveGameProps> = ({ game }) => {
         setSelection([]);
     };
     
-    const allFound = foundWords.size === words.length;
     const isCellSelected = (r: number, c: number) => selection.some(sel => sel.r === r && sel.c === c);
     const isCellFound = (r: number, c: number) => {
         for (const word of foundWords) {
@@ -527,7 +553,7 @@ const WordSearchGame: React.FC<InteractiveGameProps> = ({ game }) => {
     );
 };
 
-const EscapeRoomGame: React.FC<InteractiveGameProps> = ({ game }) => {
+const EscapeRoomGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => {
     const [gameState, setGameState] = useState<'intro' | 'puzzles' | 'escaped'>('intro');
     const [solvedPuzzles, setSolvedPuzzles] = useState<Set<number>>(new Set());
     const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
@@ -537,6 +563,12 @@ const EscapeRoomGame: React.FC<InteractiveGameProps> = ({ game }) => {
 
     const puzzles = useMemo(() => game.escapeRoomPuzzles || [], [game.escapeRoomPuzzles]);
     const solution = useMemo(() => game.escapeRoomSolution || '', [game.escapeRoomSolution]);
+
+    useEffect(() => {
+        if (gameState === 'escaped') {
+            onComplete();
+        }
+    }, [gameState, onComplete]);
 
     if (puzzles.length === 0 || !solution) return null;
 
@@ -671,7 +703,7 @@ const EscapeRoomGame: React.FC<InteractiveGameProps> = ({ game }) => {
     );
 };
 
-const CrosswordGame: React.FC<InteractiveGameProps> = ({ game }) => {
+const CrosswordGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => {
     const puzzles = useMemo(() => game.crosswordPuzzles || [], [game.crosswordPuzzles]);
     const inputRefs = useRef<Map<string, HTMLInputElement | null>>(new Map());
 
@@ -711,6 +743,12 @@ const CrosswordGame: React.FC<InteractiveGameProps> = ({ game }) => {
     const [activeDirection, setActiveDirection] = useState<'across' | 'down'>('across');
     const [isSolved, setIsSolved] = useState(false);
     const [feedback, setFeedback] = useState<Record<string, 'correct' | 'incorrect'>>({});
+
+    useEffect(() => {
+        if (isSolved) {
+            onComplete();
+        }
+    }, [isSolved, onComplete]);
 
     const activePuzzle = useMemo(() => {
         if (!activeCell) return null;
@@ -900,7 +938,7 @@ const CrosswordGame: React.FC<InteractiveGameProps> = ({ game }) => {
     );
 };
 
-const DecisionSimulatorGame: React.FC<InteractiveGameProps> = ({ game }) => {
+const DecisionSimulatorGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => {
     const scenarios = useMemo(() => game.decisionScenarios || [], [game.decisionScenarios]);
     const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -910,6 +948,13 @@ const DecisionSimulatorGame: React.FC<InteractiveGameProps> = ({ game }) => {
 
     const currentScenario = scenarios[currentScenarioIndex];
     const isLastScenario = currentScenarioIndex === scenarios.length - 1;
+    const allCompleted = useMemo(() => isLastScenario && showConsequence, [isLastScenario, showConsequence]);
+
+    useEffect(() => {
+        if (allCompleted) {
+            onComplete();
+        }
+    }, [allCompleted, onComplete]);
 
     const handleOptionSelect = (optionId: number) => {
         if (showConsequence) return;
@@ -930,8 +975,6 @@ const DecisionSimulatorGame: React.FC<InteractiveGameProps> = ({ game }) => {
         setSelectedOption(null);
         setShowConsequence(false);
     };
-
-    const allCompleted = isLastScenario && showConsequence;
 
     return (
         <Card>
@@ -995,7 +1038,7 @@ const DecisionSimulatorGame: React.FC<InteractiveGameProps> = ({ game }) => {
     );
 };
 
-const TimedQuizGame: React.FC<InteractiveGameProps> = ({ game }) => {
+const TimedQuizGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => {
     const questions = useMemo(() => game.timedQuizQuestions || [], [game.timedQuizQuestions]);
     const timeLimit = useMemo(() => game.timeLimit || 15, [game.timeLimit]);
 
@@ -1018,6 +1061,12 @@ const TimedQuizGame: React.FC<InteractiveGameProps> = ({ game }) => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
     }, [gameState]);
+
+    useEffect(() => {
+        if (gameState === 'finished') {
+            onComplete();
+        }
+    }, [gameState, onComplete]);
 
     useEffect(() => {
         if (timeLeft <= 0 && gameState === 'playing') {
@@ -1139,24 +1188,24 @@ const TimedQuizGame: React.FC<InteractiveGameProps> = ({ game }) => {
 };
 
 
-const InteractiveGame: React.FC<InteractiveGameProps> = ({ game }) => {
+const InteractiveGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => {
   switch (game.type) {
     case 'match':
-      return <MatchGame game={game} />;
+      return <MatchGame game={game} onComplete={onComplete} />;
     case 'drag_drop':
-      return <DragDropGame game={game} />;
+      return <DragDropGame game={game} onComplete={onComplete} />;
     case 'memory':
-      return <MemoryGame game={game} />;
+      return <MemoryGame game={game} onComplete={onComplete} />;
     case 'word_search':
-        return <WordSearchGame game={game} />;
+        return <WordSearchGame game={game} onComplete={onComplete} />;
     case 'escape_room':
-        return <EscapeRoomGame game={game} />;
+        return <EscapeRoomGame game={game} onComplete={onComplete} />;
     case 'crossword':
-        return <CrosswordGame game={game} />;
+        return <CrosswordGame game={game} onComplete={onComplete} />;
     case 'decision_simulator':
-        return <DecisionSimulatorGame game={game} />;
+        return <DecisionSimulatorGame game={game} onComplete={onComplete} />;
     case 'timed_quiz':
-        return <TimedQuizGame game={game} />;
+        return <TimedQuizGame game={game} onComplete={onComplete} />;
     case 'quiz': // Fallthrough for unimplemented
     default:
       return (

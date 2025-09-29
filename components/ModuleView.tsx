@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useContext, useEffect, useMemo } from 'react';
 import { Module, View } from '../types';
 import { CourseProgressContext } from '../context/CourseProgressContext';
 import Card from './common/Card';
@@ -19,8 +19,6 @@ interface ModuleViewProps {
   isFirstModule: boolean;
   isLastModule: boolean;
 }
-
-const MIN_SUBMODULE_VIEW_TIME_SECONDS = 15;
 
 const ModuleView: React.FC<ModuleViewProps> = ({ 
   module, 
@@ -59,7 +57,6 @@ const ModuleView: React.FC<ModuleViewProps> = ({
   const [selectedItemId, setSelectedItemId] = useState<string | null>(navigableItems[0]?.id || null);
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({});
   const [videoUrls, setVideoUrls] = useState<Record<string, string>>({});
-  const timerRef = useRef<number | null>(null);
 
   // Reset states on module change
   useEffect(() => {
@@ -90,56 +87,25 @@ const ModuleView: React.FC<ModuleViewProps> = ({
     loadMediaFromDB();
   }, [module, navigableItems]);
 
-  const { completedSubmodules, completeSubmodule, isModuleCompleted } = progressContext || {};
-
-  useEffect(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    if (!selectedItemId || !completeSubmodule || completedSubmodules?.has(selectedItemId)) {
-      return;
-    }
-    
-    const selectedItem = navigableItems.find(item => item.id === selectedItemId);
-
-    if (selectedItem?.type === 'submodule') {
-      let timeElapsed = 0;
-      timerRef.current = window.setInterval(() => {
-        timeElapsed += 1;
-        if (timeElapsed >= MIN_SUBMODULE_VIEW_TIME_SECONDS) {
-          completeSubmodule(selectedItemId);
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-        }
-      }, 1000);
-    } else if (selectedItem) {
-      // For slides, games, OAI, complete immediately on view
-      completeSubmodule(selectedItemId);
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [selectedItemId, navigableItems, completedSubmodules, completeSubmodule]);
-
   const handleSelectItem = (itemId: string) => {
     setSelectedItemId(itemId);
   };
 
   if (!progressContext) return null;
 
+  const { completedSubmodules, completeSubmodule, isModuleCompleted } = progressContext;
+
   const selectedItem = navigableItems.find(item => item.id === selectedItemId);
   const isEven = module.id % 2 === 0;
 
   const renderContent = () => {
     if (!selectedItem) return <Card><p>Selecciona un tema para comenzar.</p></Card>;
+
+    const onComplete = () => {
+      if (!completedSubmodules.has(selectedItem.id)) {
+        completeSubmodule(selectedItem.id);
+      }
+    };
 
     switch (selectedItem.type) {
       case 'submodule':
@@ -153,16 +119,16 @@ const ModuleView: React.FC<ModuleViewProps> = ({
         ) : null;
 
       case 'slides':
-        return <SlideViewer slides={module.slides} />;
+        return <SlideViewer slides={module.slides} onComplete={onComplete} />;
 
       case 'game':
         const gameIndex = parseInt(selectedItem.id.split('-game-')[1], 10);
         const gameData = module.interactiveGameIdeas?.[gameIndex];
-        return gameData ? <InteractiveGame game={gameData} /> : null;
+        return gameData ? <InteractiveGame game={gameData} onComplete={onComplete} /> : null;
 
       case 'oai':
-        if (module.oai === 'uiaf_flow') return <UiafFlowOAI />;
-        if (module.oai === 'risk_factor_sorter') return <RiskFactorSorterOAI />;
+        if (module.oai === 'uiaf_flow') return <UiafFlowOAI onComplete={onComplete} />;
+        if (module.oai === 'risk_factor_sorter') return <RiskFactorSorterOAI onComplete={onComplete} />;
         return null;
 
       default:
