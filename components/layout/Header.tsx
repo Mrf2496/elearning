@@ -1,8 +1,12 @@
 import React from 'react';
 import HomeIcon from '../icons/HomeIcon';
 import UserIcon from '../icons/UserIcon';
+import LogoutIcon from '../icons/LogoutIcon';
+import { useAuth } from '../../hooks/useAuth';
 
 const Header: React.FC = () => {
+  const { currentUser, logout } = useAuth();
+  
   return (
     <header className="bg-sky-500 shadow-md z-10 text-white no-print">
       <div className="mx-auto px-6 py-3 flex justify-between items-center">
@@ -19,10 +23,17 @@ const Header: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center space-x-4 text-sm">
-          <div className="flex items-center space-x-2">
-            <UserIcon className="w-5 h-5" />
-            <span className="font-semibold">MRF</span>
-          </div>
+          {currentUser && (
+            <>
+              <div className="flex items-center space-x-2">
+                <UserIcon className="w-5 h-5" />
+                <span className="font-semibold">{currentUser.name}</span>
+              </div>
+              <button onClick={logout} title="Cerrar Sesión" className="p-2 rounded-full hover:bg-sky-600 transition-colors">
+                  <LogoutIcon className="w-5 h-5" />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </header>

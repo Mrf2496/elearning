@@ -1,4 +1,3 @@
-
 export interface Slide {
   title: string;
   points: string[];
@@ -8,7 +7,7 @@ export interface Slide {
 export interface MultimediaContent {
   audioScript: string;
   videoConcept: {
-    title: string;
+    title:string;
     script: string;
   };
 }
@@ -113,4 +112,10 @@ export enum View {
   CaseStudies,
   Quiz,
   Certificate,
+}
+
+export interface User {
+  name: string;
+  cedula: string;
+  password: string; // In a real app, this would be a hash
 }

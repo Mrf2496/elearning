@@ -1,7 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import Card from './common/Card';
 import Button from './common/Button';
 import { CourseProgressContext } from '../context/CourseProgressContext';
+import { useAuth } from '../hooks/useAuth';
 
 // Declarar las librerías globales que se cargan desde el CDN
 declare global {
@@ -12,6 +13,7 @@ declare global {
 }
 
 const Certificate: React.FC = () => {
+  const { currentUser } = useAuth();
   const [name, setName] = useState('');
   const [idNumber, setIdNumber] = useState('');
   const [companyName, setCompanyName] = useState('');
@@ -19,6 +21,13 @@ const Certificate: React.FC = () => {
   const [isGenerated, setIsGenerated] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const progressContext = useContext(CourseProgressContext);
+
+  useEffect(() => {
+    if (currentUser) {
+      setName(currentUser.name);
+      setIdNumber(currentUser.cedula);
+    }
+  }, [currentUser]);
   
   const completionDate = new Date().toLocaleDateString('es-CO', {
     year: 'numeric',

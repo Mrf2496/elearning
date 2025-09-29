@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { View } from './types';
 import { courseData } from './constants/courseData';
@@ -13,14 +12,96 @@ import FinalQuiz from './components/FinalQuiz';
 import Certificate from './components/Certificate';
 import { saveVideoUrl, getVideoUrl, saveAudioUrl, getAudioUrl } from './lib/db';
 import { getEmbedUrl } from './lib/utils';
+import { AuthProvider, useAuth } from './hooks/useAuth';
+import LoginView from './components/LoginView';
 
-export default function App() {
+const MainApp: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.Dashboard);
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
   
   const progressHook = useCourseProgress();
 
-  // Seed the database with media on first load
+  const handleSelectModule = (moduleId: number) => {
+    setSelectedModuleId(moduleId);
+    if (moduleId === 11) {
+      setCurrentView(View.CaseStudies);
+    } else {
+      setCurrentView(View.Module);
+    }
+  };
+
+  const handleNavigate = (view: View) => {
+    setCurrentView(view);
+  };
+
+  const selectedModule = useMemo(() => 
+    courseData.modules.find(m => m.id === selectedModuleId),
+    [selectedModuleId]
+  );
+
+  const moduleIds = useMemo(() => courseData.modules.map(m => m.id), []);
+  const currentModuleIndex = selectedModuleId !== null ? moduleIds.indexOf(selectedModuleId) : -1;
+
+  const handleNextModule = () => {
+    if (currentModuleIndex > -1 && currentModuleIndex < moduleIds.length - 1) {
+      const nextModuleId = moduleIds[currentModuleIndex + 1];
+      handleSelectModule(nextModuleId);
+    }
+  };
+
+  const handlePreviousModule = () => {
+    if (currentModuleIndex > 0) {
+      const prevModuleId = moduleIds[currentModuleIndex - 1];
+      handleSelectModule(prevModuleId);
+    }
+  };
+  
+  const renderContent = () => {
+    switch(currentView) {
+      case View.Module:
+        return selectedModule ? (
+          <ModuleView 
+            module={selectedModule} 
+            onModuleComplete={() => progressHook.completeModule(selectedModule.id)}
+            onNavigate={handleNavigate}
+            onNextModule={handleNextModule}
+            onPreviousModule={handlePreviousModule}
+            isFirstModule={currentModuleIndex === 0}
+            isLastModule={currentModuleIndex === moduleIds.length - 1}
+          />
+        ) : <CourseDashboard onSelectModule={handleSelectModule} />;
+      case View.CaseStudies:
+        return <CaseStudiesView onComplete={() => progressHook.completeModule(11)} />;
+      case View.Quiz:
+        return <FinalQuiz />;
+      case View.Certificate:
+        return <Certificate />;
+      case View.Dashboard:
+      default:
+        return <CourseDashboard onSelectModule={handleSelectModule} />;
+    }
+  }
+
+  return (
+    <CourseProgressContext.Provider value={progressHook}>
+      <div className="min-h-screen flex flex-col bg-slate-100">
+        <Header />
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar currentView={currentView} onNavigate={handleNavigate} />
+          <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+            {renderContent()}
+          </main>
+        </div>
+      </div>
+    </CourseProgressContext.Provider>
+  );
+}
+
+
+const AppContent: React.FC = () => {
+  const { currentUser } = useAuth();
+  
+  // Seed the database with media on first load. This only runs once.
   useEffect(() => {
     const seedSubmoduleMedia = async () => {
       // --- Submodule 1-1 ---
@@ -786,79 +867,13 @@ export default function App() {
     seedSubmoduleMedia();
   }, []);
 
+  return currentUser ? <MainApp /> : <LoginView />;
+}
 
-  const handleSelectModule = (moduleId: number) => {
-    setSelectedModuleId(moduleId);
-    if (moduleId === 11) {
-      setCurrentView(View.CaseStudies);
-    } else {
-      setCurrentView(View.Module);
-    }
-  };
-
-  const handleNavigate = (view: View) => {
-    setCurrentView(view);
-  };
-
-  const selectedModule = useMemo(() => 
-    courseData.modules.find(m => m.id === selectedModuleId),
-    [selectedModuleId]
-  );
-
-  const moduleIds = useMemo(() => courseData.modules.map(m => m.id), []);
-  const currentModuleIndex = selectedModuleId !== null ? moduleIds.indexOf(selectedModuleId) : -1;
-
-  const handleNextModule = () => {
-    if (currentModuleIndex > -1 && currentModuleIndex < moduleIds.length - 1) {
-      const nextModuleId = moduleIds[currentModuleIndex + 1];
-      handleSelectModule(nextModuleId);
-    }
-  };
-
-  const handlePreviousModule = () => {
-    if (currentModuleIndex > 0) {
-      const prevModuleId = moduleIds[currentModuleIndex - 1];
-      handleSelectModule(prevModuleId);
-    }
-  };
-  
-  const renderContent = () => {
-    switch(currentView) {
-      case View.Module:
-        return selectedModule ? (
-          <ModuleView 
-            module={selectedModule} 
-            onModuleComplete={() => progressHook.completeModule(selectedModule.id)}
-            onNavigate={handleNavigate}
-            onNextModule={handleNextModule}
-            onPreviousModule={handlePreviousModule}
-            isFirstModule={currentModuleIndex === 0}
-            isLastModule={currentModuleIndex === moduleIds.length - 1}
-          />
-        ) : <CourseDashboard onSelectModule={handleSelectModule} />;
-      case View.CaseStudies:
-        return <CaseStudiesView onComplete={() => progressHook.completeModule(11)} />;
-      case View.Quiz:
-        return <FinalQuiz />;
-      case View.Certificate:
-        return <Certificate />;
-      case View.Dashboard:
-      default:
-        return <CourseDashboard onSelectModule={handleSelectModule} />;
-    }
-  }
-
+export default function App() {
   return (
-    <CourseProgressContext.Provider value={progressHook}>
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar currentView={currentView} onNavigate={handleNavigate} />
-          <main className="flex-1 p-6 md:p-8 overflow-y-auto">
-            {renderContent()}
-          </main>
-        </div>
-      </div>
-    </CourseProgressContext.Provider>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

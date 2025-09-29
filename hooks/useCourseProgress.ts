@@ -1,64 +1,84 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { courseData } from '../constants/courseData';
+import { useAuth } from './useAuth';
 
 const MODULE_COUNT = courseData.modules.length;
 
 export const useCourseProgress = () => {
-  const [completedModules, setCompletedModules] = useState<Set<number>>(() => {
-    try {
-      const item = window.localStorage.getItem('completedModules');
-      return item ? new Set(JSON.parse(item)) : new Set();
-    } catch (error) {
-      console.error(error);
-      return new Set();
-    }
-  });
+  const { currentUser } = useAuth();
 
-  const [completedSubmodules, setCompletedSubmodules] = useState<Set<string>>(() => {
-    try {
-      const item = window.localStorage.getItem('completedSubmodules');
-      return item ? new Set(JSON.parse(item)) : new Set();
-    } catch (error) {
-      console.error(error);
-      return new Set();
-    }
-  });
+  const getStorageKey = useCallback((baseKey: string) => {
+    return currentUser ? `${currentUser.cedula}_${baseKey}` : null;
+  }, [currentUser]);
   
-  const [quizPassed, setQuizPassed] = useState<boolean>(() => {
-    try {
-      const item = window.localStorage.getItem('quizPassed');
-      return item ? JSON.parse(item) : false;
-    } catch (error) {
-      console.error(error);
-      return false;
-    }
-  });
+  const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
+  const [completedSubmodules, setCompletedSubmodules] = useState<Set<string>>(new Set());
+  const [quizPassed, setQuizPassed] = useState<boolean>(false);
 
+  // Load progress when user changes
   useEffect(() => {
-    try {
-      window.localStorage.setItem('completedModules', JSON.stringify(Array.from(completedModules)));
-    } catch (error) {
-      console.error(error);
+    if (currentUser) {
+      try {
+        const modulesKey = getStorageKey('completedModules');
+        const submodulesKey = getStorageKey('completedSubmodules');
+        const quizKey = getStorageKey('quizPassed');
+        
+        const modulesItem = modulesKey ? window.localStorage.getItem(modulesKey) : null;
+        setCompletedModules(modulesItem ? new Set(JSON.parse(modulesItem)) : new Set());
+
+        const submodulesItem = submodulesKey ? window.localStorage.getItem(submodulesKey) : null;
+        setCompletedSubmodules(submodulesItem ? new Set(JSON.parse(submodulesItem)) : new Set());
+
+        const quizItem = quizKey ? window.localStorage.getItem(quizKey) : null;
+        setQuizPassed(quizItem ? JSON.parse(quizItem) : false);
+
+      } catch (error) {
+        console.error("Error loading progress from localStorage", error);
+        setCompletedModules(new Set());
+        setCompletedSubmodules(new Set());
+        setQuizPassed(false);
+      }
+    } else {
+      // Reset progress on logout
+      setCompletedModules(new Set());
+      setCompletedSubmodules(new Set());
+      setQuizPassed(false);
     }
-  }, [completedModules]);
+  }, [currentUser, getStorageKey]);
+
+  // Save progress when it changes
+  useEffect(() => {
+    const key = getStorageKey('completedModules');
+    if (key) {
+      try {
+        window.localStorage.setItem(key, JSON.stringify(Array.from(completedModules)));
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }, [completedModules, getStorageKey]);
   
   useEffect(() => {
-    try {
-      window.localStorage.setItem('completedSubmodules', JSON.stringify(Array.from(completedSubmodules)));
-    } catch (error) {
-      console.error(error);
+    const key = getStorageKey('completedSubmodules');
+    if (key) {
+      try {
+        window.localStorage.setItem(key, JSON.stringify(Array.from(completedSubmodules)));
+      } catch (error) {
+        console.error(error);
+      }
     }
-  }, [completedSubmodules]);
+  }, [completedSubmodules, getStorageKey]);
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem('quizPassed', JSON.stringify(quizPassed));
-    } catch (error) {
-      console.error(error);
+    const key = getStorageKey('quizPassed');
+    if (key) {
+      try {
+        window.localStorage.setItem(key, JSON.stringify(quizPassed));
+      } catch (error) {
+        console.error(error);
+      }
     }
-  }, [quizPassed]);
-
+  }, [quizPassed, getStorageKey]);
 
   const completeModule = useCallback((moduleId: number) => {
     setCompletedModules(prev => new Set(prev).add(moduleId));
@@ -95,7 +115,7 @@ export const useCourseProgress = () => {
     }
     const totalCompletableItems = courseData.modules.length + 1; // Modules + Case Studies
 
-    return (completedCount / totalCompletableItems) * 100;
+    return totalCompletableItems > 0 ? (completedCount / totalCompletableItems) * 100 : 0;
   }, [isModuleCompleted, completedModules]);
 
   const getModuleProgress = useCallback((moduleId: number): number => {
