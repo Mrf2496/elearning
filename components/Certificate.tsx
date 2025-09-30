@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import Card from './common/Card';
 import Button from './common/Button';
 import { CourseProgressContext } from '../context/CourseProgressContext';
@@ -14,20 +14,14 @@ declare global {
 
 const Certificate: React.FC = () => {
   const { currentUser } = useAuth();
-  const [name, setName] = useState('');
-  const [idNumber, setIdNumber] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [complianceOfficerName, setComplianceOfficerName] = useState('');
   const [isGenerated, setIsGenerated] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const progressContext = useContext(CourseProgressContext);
 
-  useEffect(() => {
-    if (currentUser) {
-      setName(currentUser.name);
-      setIdNumber(currentUser.cedula);
-    }
-  }, [currentUser]);
+  const name = currentUser?.name || '';
+  const idNumber = currentUser?.cedula || '';
   
   const completionDate = new Date().toLocaleDateString('es-CO', {
     year: 'numeric',
@@ -36,10 +30,10 @@ const Certificate: React.FC = () => {
   });
 
   const handleGenerate = () => {
-    if (name.trim() && idNumber.trim() && companyName.trim() && complianceOfficerName.trim()) {
+    if (name && idNumber && companyName.trim() && complianceOfficerName.trim()) {
       setIsGenerated(true);
     } else {
-      alert('Por favor, ingresa todos los datos: nombre completo, identificación, nombre de la empresa y nombre del oficial de cumplimiento.');
+      alert('Por favor, ingresa el nombre de la empresa y el nombre del oficial de cumplimiento.');
     }
   };
 
@@ -141,30 +135,26 @@ const Certificate: React.FC = () => {
         <p>Para descargar el certificado en PDF, primero completa todos los campos y haz clic en "Generar mi Certificado". La opción para descargar aparecerá junto con la vista previa del certificado.</p>
       </div>
       <p className="text-gray-600 mb-6">
-        Ingresa tus datos como aparecerán en el certificado. Asegúrate de que sean correctos.
+        Tus datos de usuario se usarán para el certificado. Ingresa los datos de tu empresa para continuar.
       </p>
       <div className="space-y-4 max-w-md mx-auto">
         <div>
           <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Nombre Completo</label>
-          <input
-            type="text"
+          <p
             id="fullName"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-            placeholder="Ej: Ana María Pérez"
-          />
+            className="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-500"
+          >
+            {name}
+          </p>
         </div>
         <div>
           <label htmlFor="idNumber" className="block text-sm font-medium text-gray-700">Número de Identificación</label>
-          <input
-            type="text"
+          <p
             id="idNumber"
-            value={idNumber}
-            onChange={(e) => setIdNumber(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-            placeholder="Ej: 1234567890"
-          />
+            className="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm sm:text-sm text-gray-500"
+          >
+            {idNumber}
+          </p>
         </div>
         <div>
           <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">Nombre de la Empresa</label>
@@ -175,6 +165,7 @@ const Certificate: React.FC = () => {
             onChange={(e) => setCompanyName(e.target.value)}
             className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             placeholder="Ej: Mi Cooperativa SAS"
+            required
           />
         </div>
         <div>
@@ -186,6 +177,7 @@ const Certificate: React.FC = () => {
             onChange={(e) => setComplianceOfficerName(e.target.value)}
             className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
             placeholder="Ej: Carlos Rodriguez"
+            required
           />
         </div>
         <div className="pt-2">
