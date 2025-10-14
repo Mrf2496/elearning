@@ -18,6 +18,7 @@ import LoginView from './components/LoginView';
 const MainApp: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.Dashboard);
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const progressHook = useCourseProgress();
 
@@ -28,10 +29,12 @@ const MainApp: React.FC = () => {
     } else {
       setCurrentView(View.Module);
     }
+    setIsSidebarOpen(false);
   };
 
   const handleNavigate = (view: View) => {
     setCurrentView(view);
+    setIsSidebarOpen(false);
   };
 
   const selectedModule = useMemo(() => 
@@ -84,9 +87,20 @@ const MainApp: React.FC = () => {
   return (
     <CourseProgressContext.Provider value={progressHook}>
       <div className="min-h-screen flex flex-col bg-slate-100">
-        <Header />
+        <Header onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
         <div className="flex flex-1 overflow-hidden">
-          <Sidebar currentView={currentView} onNavigate={handleNavigate} />
+          {isSidebarOpen && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden" 
+              onClick={() => setIsSidebarOpen(false)}
+            ></div>
+          )}
+          <Sidebar 
+            currentView={currentView} 
+            onNavigate={handleNavigate} 
+            isOpen={isSidebarOpen} 
+            onClose={() => setIsSidebarOpen(false)}
+          />
           <main className="flex-1 p-6 md:p-8 overflow-y-auto">
             {renderContent()}
           </main>

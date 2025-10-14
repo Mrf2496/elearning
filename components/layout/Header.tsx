@@ -3,14 +3,22 @@ import HomeIcon from '../icons/HomeIcon';
 import UserIcon from '../icons/UserIcon';
 import LogoutIcon from '../icons/LogoutIcon';
 import { useAuth } from '../../hooks/useAuth';
+import MenuIcon from '../icons/MenuIcon';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  onToggleSidebar: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const { currentUser, logout } = useAuth();
   
   return (
     <header className="bg-sky-500 shadow-md z-10 text-white no-print">
       <div className="mx-auto px-6 py-3 flex justify-between items-center">
         <div className="flex items-center space-x-4">
+          <button className="md:hidden p-1 -ml-2" onClick={onToggleSidebar}>
+              <MenuIcon className="w-6 h-6" />
+          </button>
           <div className="flex items-center space-x-2">
             <HomeIcon className="w-6 h-6" />
             <span className="text-lg font-semibold hidden sm:block">Inicio</span>

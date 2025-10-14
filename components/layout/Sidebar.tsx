@@ -8,20 +8,23 @@ import QuestionMarkCircleIcon from '../icons/QuestionMarkCircleIcon';
 import AwardIcon from '../icons/AwardIcon';
 import ChevronRightIcon from '../icons/ChevronRightIcon';
 import LockIcon from '../icons/LockIcon';
+import XIcon from '../icons/XIcon';
 
 interface SidebarProps {
   currentView: View;
   onNavigate: (view: View) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen, onClose }) => {
   const progressContext = useContext(CourseProgressContext);
   if (!progressContext) return null;
 
   const { quizPassed, getCourseProgress } = progressContext;
   
   const courseProgress = getCourseProgress();
-  const isQuizUnlocked = true; // courseProgress >= 85; // Habilitado temporalmente
+  const isQuizUnlocked = courseProgress >= 60;
 
   const navItemMap: Record<string, View> = {
     'Panel Principal': View.Dashboard,
@@ -40,8 +43,13 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => {
   ];
 
   return (
-    <aside className="w-72 bg-white p-6 flex-shrink-0 hidden md:flex flex-col no-print">
-      <h2 className="text-lg font-bold text-slate-900 mb-6">Navegación</h2>
+    <aside className={`fixed inset-y-0 left-0 z-30 w-72 bg-white p-6 flex-shrink-0 flex flex-col no-print transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-lg font-bold text-slate-900">Navegación</h2>
+        <button className="md:hidden p-1" onClick={onClose}>
+            <XIcon className="w-6 h-6 text-slate-500" />
+        </button>
+      </div>
       <nav className="flex-grow">
         <ul className="space-y-1.5">
           {navItems.map((item) => {
