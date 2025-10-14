@@ -710,7 +710,6 @@ const CrosswordGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => 
     const { width, height, cellMap, puzzleStartCells } = useMemo(() => {
         let w = 0;
         let h = 0;
-        // FIX: Define a type alias for the cell data to ensure type consistency and avoid inference issues.
         type CellData = { puzzles: { id: number; direction: 'across' | 'down' }[]; answer: string; number?: number };
         const map = new Map<string, CellData>();
         const psc = new Map<number, {x: number, y: number}>();
@@ -725,14 +724,25 @@ const CrosswordGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => 
                 h = Math.max(h, y + 1);
 
                 const key = `${y}-${x}`;
-                // FIX: Explicitly type `cellData` to ensure the object, whether from the map or newly created,
-                // is known to be of a type where the optional 'number' property can be assigned.
-                const cellData: CellData = map.get(key) || { puzzles: [], answer: p.answer[i] };
+                
+                // Get or create cell data
+                let cellData = map.get(key);
+                if (!cellData) {
+                    cellData = {
+                        puzzles: [],
+                        answer: p.answer[i],
+                    };
+                    map.set(key, cellData);
+                }
+                
+                // Add puzzle info to the cell
+                cellData.puzzles.push({ id: p.id, direction: p.direction });
+                
+                // Set cell number if it's the start of a word
                 if (i === 0) {
+                    // This could overwrite if two words start at the same cell, which is a flaw in crossword design but we handle it.
                     cellData.number = p.id;
                 }
-                cellData.puzzles.push({ id: p.id, direction: p.direction });
-                map.set(key, cellData);
             }
         });
         return { width: w, height: h, cellMap: map, puzzleStartCells: psc };

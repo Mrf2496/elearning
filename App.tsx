@@ -34,6 +34,7 @@ const MainApp: React.FC = () => {
 
   const handleNavigate = (view: View) => {
     setCurrentView(view);
+    setSelectedModuleId(null);
     setIsSidebarOpen(false);
   };
 
@@ -73,7 +74,7 @@ const MainApp: React.FC = () => {
           />
         ) : <CourseDashboard onSelectModule={handleSelectModule} />;
       case View.CaseStudies:
-        return <CaseStudiesView />;
+        return <CaseStudiesView onNavigate={handleNavigate}/>;
       case View.Quiz:
         return <FinalQuiz />;
       case View.Certificate:
@@ -100,6 +101,8 @@ const MainApp: React.FC = () => {
             onNavigate={handleNavigate} 
             isOpen={isSidebarOpen} 
             onClose={() => setIsSidebarOpen(false)}
+            onSelectModule={handleSelectModule}
+            selectedModuleId={selectedModuleId}
           />
           <main className="flex-1 p-6 md:p-8 overflow-y-auto">
             {renderContent()}
