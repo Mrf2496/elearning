@@ -3,115 +3,162 @@ import { useAuth } from '../hooks/useAuth';
 import Card from './common/Card';
 import Button from './common/Button';
 import HomeIcon from './icons/HomeIcon';
+import { User } from '../types';
 
 const LoginView: React.FC = () => {
   const [isLoginView, setIsLoginView] = useState(true);
-  const [cedula, setCedula] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [cedula, setCedula] = useState('');
+  const [role, setRole] = useState<User['role']>('USUARIO');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const { login, register } = useAuth();
-  
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { login, publicRegister } = useAuth();
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFeedback(null);
-    let result;
-    if (isLoginView) {
-      result = await login(cedula, password);
-    } else {
-      if(!name) {
-          setFeedback({ type: 'error', message: 'El nombre es obligatorio.' });
-          return;
-      }
-      result = await register(name, cedula, password);
-      if (result.success) {
-        setIsLoginView(true); // Switch to login view after successful registration
-        setCedula('');
-        setPassword('');
-        setName('');
-      }
+    if (!email || !password) {
+        setFeedback({ type: 'error', message: 'Todos los campos son obligatorios.'});
+        return;
     }
-    setFeedback({ type: result.success ? 'success' : 'error', message: result.message });
+    const result = await login(email, password);
+    if (result && !result.success) {
+      setFeedback({ type: 'error', message: result.message });
+    }
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFeedback(null);
+    if (!name || !email || !role || !cedula || !password) {
+        setFeedback({ type: 'error', message: 'Todos los campos son obligatorios.'});
+        return;
+    }
+    if (!publicRegister) {
+      setFeedback({ type: 'error', message: 'La función de registro no está disponible.' });
+      return;
+    }
+    const result = await publicRegister(name, cedula, email, password, role);
+    if (result.success) {
+      setFeedback({ type: 'success', message: result.message });
+      setIsLoginView(true);
+      // Clear fields after successful registration
+      setName('');
+      setCedula('');
+      setEmail('');
+      setPassword('');
+      setRole('USUARIO');
+    } else {
+      setFeedback({ type: 'error', message: result.message });
+    }
   };
   
-  const toggleView = () => {
-    setIsLoginView(!isLoginView);
+  const toggleView = (view: 'login' | 'register') => {
+    setIsLoginView(view === 'login');
     setFeedback(null);
-    setCedula('');
+    // Reset fields when switching views
+    setEmail('');
     setPassword('');
     setName('');
-  };
+    setCedula('');
+    setRole('USUARIO');
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col justify-center items-center p-4">
-        <div className="max-w-md w-full mx-auto">
-            <div className="flex justify-center items-center mb-6 text-slate-700">
-                <HomeIcon className="w-10 h-10 mr-3 text-sky-500" />
+      <div className="max-w-md w-full mx-auto">
+        <div className="flex justify-center items-center mb-6 text-slate-700">
+          <HomeIcon className="w-10 h-10 mr-3 text-sky-500" />
+          <div>
+            <h1 className="text-2xl font-bold">Curso E-learning SARLAFT</h1>
+            <p className="text-sm">Sector Solidario</p>
+          </div>
+        </div>
+        <Card className="shadow-2xl">
+          <div className="p-6">
+            <h2 className="text-center text-2xl font-bold text-gray-800 mb-6">
+              {isLoginView ? 'Iniciar Sesión' : 'Crear Cuenta'}
+            </h2>
+            {isLoginView ? (
+              <form onSubmit={handleLoginSubmit} className="space-y-4 animate-fade-in">
                 <div>
-                    <h1 className="text-2xl font-bold">Curso E-learning SARLAFT</h1>
-                    <p className="text-sm">Sector Solidario</p>
-                </div>
-            </div>
-            <Card className="shadow-2xl">
-                <h2 className="text-2xl font-bold text-center text-slate-800 mb-6">
-                {isLoginView ? 'Iniciar Sesión' : 'Crear Cuenta'}
-                </h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                {!isLoginView && (
-                    <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                        <input
-                            type="text"
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                            required
-                        />
-                    </div>
-                )}
-                <div>
-                    <label htmlFor="cedula" className="block text-sm font-medium text-gray-700">Cédula</label>
-                    <input
-                        type="text"
-                        id="cedula"
-                        value={cedula}
-                        onChange={(e) => setCedula(e.target.value.replace(/\D/g, ''))}
-                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                        required
-                    />
+                  <label htmlFor="email-login" className="block text-sm font-medium text-gray-700">
+                    Correo Electrónico
+                  </label>
+                  <input
+                    type="email" id="email-login" value={email} onChange={(e) => setEmail(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                  />
                 </div>
                 <div>
-                    <label htmlFor="password"className="block text-sm font-medium text-gray-700">Contraseña</label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                        required
-                    />
+                  <label htmlFor="password-login" className="block text-sm font-medium text-gray-700">
+                    Contraseña
+                  </label>
+                  <input
+                    type="password" id="password-login" value={password} onChange={(e) => setPassword(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                  />
                 </div>
                 {feedback && (
-                    <div className={`p-3 rounded-md text-sm text-center ${
-                        feedback.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                        {feedback.message}
-                    </div>
+                  <div className={`p-3 rounded-md text-sm text-center ${feedback.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                    {feedback.message}
+                  </div>
                 )}
                 <div>
-                    <Button type="submit" className="w-full">
-                        {isLoginView ? 'Ingresar' : 'Registrarse'}
-                    </Button>
+                  <Button type="submit" className="w-full">Ingresar</Button>
                 </div>
-                </form>
-                <div className="mt-4 text-center text-sm">
-                <button onClick={toggleView} className="text-sky-600 hover:text-sky-800 hover:underline">
-                    {isLoginView ? '¿No tienes cuenta? Regístrate aquí' : '¿Ya tienes cuenta? Inicia sesión'}
-                </button>
-                </div>
-            </Card>
-        </div>
+                 <p className="text-center text-sm mt-4">
+                    ¿No tienes cuenta?{' '}
+                    <button type="button" onClick={() => toggleView('register')} className="font-medium text-orange-600 hover:text-orange-500">
+                        Regístrate
+                    </button>
+                </p>
+              </form>
+            ) : (
+              <form onSubmit={handleRegisterSubmit} className="space-y-4 animate-fade-in">
+                 <div>
+                    <label htmlFor="name-register" className="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                    <input type="text" id="name-register" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                 </div>
+                 <div>
+                    <label htmlFor="email-register" className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+                    <input type="email" id="email-register" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                 </div>
+                  <div>
+                    <label htmlFor="role-register" className="block text-sm font-medium text-gray-700">Tipo de Usuario</label>
+                    <select id="role-register" value={role} onChange={e => setRole(e.target.value as User['role'])} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-white">
+                      <option value="USUARIO">Usuario</option>
+                      <option value="ADMINISTRADOR">Administrador</option>
+                    </select>
+                  </div>
+                 <div>
+                    <label htmlFor="cedula-register" className="block text-sm font-medium text-gray-700">Cédula</label>
+                    <input type="text" id="cedula-register" value={cedula} onChange={(e) => setCedula(e.target.value.replace(/\D/g, ''))} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                 </div>
+                 <div>
+                    <label htmlFor="password-register" className="block text-sm font-medium text-gray-700">Contraseña</label>
+                    <input type="password" id="password-register" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"/>
+                 </div>
+                {feedback && (
+                  <div className={`p-3 rounded-md text-sm text-center ${feedback.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                    {feedback.message}
+                  </div>
+                )}
+                 <div>
+                    <Button type="submit" className="w-full">Registrarse</Button>
+                 </div>
+                 <p className="text-center text-sm mt-4">
+                    ¿Ya tienes cuenta?{' '}
+                    <button type="button" onClick={() => toggleView('login')} className="font-medium text-orange-600 hover:text-orange-500">
+                        Inicia sesión
+                    </button>
+                </p>
+              </form>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

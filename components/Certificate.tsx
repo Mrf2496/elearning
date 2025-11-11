@@ -1,8 +1,11 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import Card from './common/Card';
 import Button from './common/Button';
 import { CourseProgressContext } from '../context/CourseProgressContext';
 import { useAuth } from '../hooks/useAuth';
+import { Company } from '../types';
+import { getCompanyById } from '../lib/companyManagement';
+
 
 // Declarar las librerías globales que se cargan desde el CDN
 declare global {
@@ -14,6 +17,7 @@ declare global {
 
 const Certificate: React.FC = () => {
   const { currentUser } = useAuth();
+  const [company, setCompany] = useState<Company | null>(null);
   const [companyName, setCompanyName] = useState('');
   const [complianceOfficerName, setComplianceOfficerName] = useState('');
   const [isGenerated, setIsGenerated] = useState(false);
@@ -28,6 +32,19 @@ const Certificate: React.FC = () => {
     month: 'long',
     day: 'numeric',
   });
+
+  useEffect(() => {
+    const fetchCompany = async () => {
+        if (currentUser?.empresaId) {
+            const companyData = await getCompanyById(currentUser.empresaId);
+            setCompany(companyData);
+            if (companyData) {
+                setCompanyName(companyData.nombre);
+            }
+        }
+    };
+    fetchCompany();
+  }, [currentUser]);
 
   const handleGenerate = () => {
     if (name && idNumber && companyName.trim() && complianceOfficerName.trim()) {
@@ -90,6 +107,7 @@ const Certificate: React.FC = () => {
         <div id="certificate-print-area" className="p-4 sm:p-8 bg-white border-8 border-blue-800 rounded-lg shadow-2xl relative w-full aspect-[1.414]">
             <div className="absolute inset-0 bg-gray-50 opacity-10" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23a0aec0\' fill-opacity=\'0.1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'}}></div>
             <div className="text-center relative">
+              {company?.logo && <img src={company.logo} alt={`${company.nombre} Logo`} className="mx-auto h-20 w-auto object-contain mb-4"/>}
               <p className="text-4xl sm:text-5xl font-bold text-blue-800 tracking-widest">{companyName.toUpperCase()}</p>
               <h1 className="text-2xl font-bold text-slate-700 mt-6">Certificado de Finalización</h1>
               <p className="mt-8 text-xl text-gray-700">Se certifica a:</p>
@@ -163,9 +181,10 @@ const Certificate: React.FC = () => {
             id="companyName"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+            className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm sm:text-sm ${!!company ? 'bg-gray-100 text-gray-500' : 'bg-white'}`}
             placeholder="Ej: Mi Cooperativa SAS"
             required
+            disabled={!!company}
           />
         </div>
         <div>

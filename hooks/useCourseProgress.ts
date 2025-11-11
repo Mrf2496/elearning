@@ -1,86 +1,119 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { courseData } from '../constants/courseData';
 import { useAuth } from './useAuth';
+import { getFirebaseServices, isFirebaseConfigured } from '../firebase/config';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const SUBMODULES_WITH_VIDEO = [
     '1-1', '1-2', '1-3', '2-1', '2-2', '2-3', '3-1', '4-1', '5-1', '6-1', '7-1', '8-1', '9-1', '10-1'
 ];
 
+const getLocalStorageKey = (userId: string) => `courseProgress-${userId}`;
+
 export const useCourseProgress = () => {
   const { currentUser } = useAuth();
-
-  const getStorageKey = useCallback((baseKey: string) => {
-    return currentUser ? `${currentUser.cedula}_${baseKey}` : null;
-  }, [currentUser]);
   
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
   const [completedSubmodules, setCompletedSubmodules] = useState<Set<string>>(new Set());
   const [quizPassed, setQuizPassed] = useState<boolean>(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Load progress when user changes
+  // Load progress
   useEffect(() => {
-    if (currentUser) {
-      try {
-        const modulesKey = getStorageKey('completedModules');
-        const submodulesKey = getStorageKey('completedSubmodules');
-        const quizKey = getStorageKey('quizPassed');
-        
-        const modulesItem = modulesKey ? window.localStorage.getItem(modulesKey) : null;
-        setCompletedModules(modulesItem ? new Set(JSON.parse(modulesItem)) : new Set());
-
-        const submodulesItem = submodulesKey ? window.localStorage.getItem(submodulesKey) : null;
-        setCompletedSubmodules(submodulesItem ? new Set(JSON.parse(submodulesItem)) : new Set());
-
-        const quizItem = quizKey ? window.localStorage.getItem(quizKey) : null;
-        setQuizPassed(quizItem ? JSON.parse(quizItem) : false);
-
-      } catch (error) {
-        console.error("Error loading progress from localStorage", error);
+    const loadProgress = async () => {
+      if (!currentUser) {
+        // Reset progress on logout
         setCompletedModules(new Set());
         setCompletedSubmodules(new Set());
         setQuizPassed(false);
+        setIsInitialLoad(true);
+        return;
       }
-    } else {
-      // Reset progress on logout
-      setCompletedModules(new Set());
-      setCompletedSubmodules(new Set());
-      setQuizPassed(false);
-    }
-  }, [currentUser, getStorageKey]);
 
-  // Save progress when it changes
-  useEffect(() => {
-    const key = getStorageKey('completedModules');
-    if (key) {
-      try {
-        window.localStorage.setItem(key, JSON.stringify(Array.from(completedModules)));
-      } catch (error) {
-        console.error(error);
+      if (isFirebaseConfigured()) {
+        const services = getFirebaseServices();
+        if (!services) {
+          setIsInitialLoad(false);
+          return;
+        }
+        const { db } = services;
+        try {
+          const progressDocRef = doc(db, 'userProgress', currentUser.uid);
+          const progressDoc = await getDoc(progressDocRef);
+          
+          if (progressDoc.exists()) {
+            const data = progressDoc.data();
+            setCompletedModules(new Set(data.completedModules || []));
+            setCompletedSubmodules(new Set(data.completedSubmodules || []));
+            setQuizPassed(data.quizPassed || false);
+          } else {
+            setCompletedModules(new Set());
+            setCompletedSubmodules(new Set());
+            setQuizPassed(false);
+          }
+        } catch (error) {
+          console.error("Error loading progress from Firestore", error);
+        } finally {
+            setIsInitialLoad(false);
+        }
+      } else {
+        // Load from localStorage for demo user
+        try {
+            const key = getLocalStorageKey(currentUser.uid);
+            const savedProgress = localStorage.getItem(key);
+            if (savedProgress) {
+                const data = JSON.parse(savedProgress);
+                setCompletedModules(new Set(data.completedModules || []));
+                setCompletedSubmodules(new Set(data.completedSubmodules || []));
+                setQuizPassed(data.quizPassed || false);
+            }
+        } catch(error) {
+            console.error("Error loading progress from localStorage", error);
+        } finally {
+            setIsInitialLoad(false);
+        }
       }
-    }
-  }, [completedModules, getStorageKey]);
-  
-  useEffect(() => {
-    const key = getStorageKey('completedSubmodules');
-    if (key) {
-      try {
-        window.localStorage.setItem(key, JSON.stringify(Array.from(completedSubmodules)));
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  }, [completedSubmodules, getStorageKey]);
+    };
+    loadProgress();
+  }, [currentUser]);
 
+  // Save progress
   useEffect(() => {
-    const key = getStorageKey('quizPassed');
-    if (key) {
-      try {
-        window.localStorage.setItem(key, JSON.stringify(quizPassed));
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  }, [quizPassed, getStorageKey]);
+    const saveProgress = async () => {
+        if (!currentUser || isInitialLoad) return;
+
+        if (isFirebaseConfigured()) {
+            const services = getFirebaseServices();
+            if (!services) return;
+            const { db } = services;
+            try {
+                const progressDocRef = doc(db, 'userProgress', currentUser.uid);
+                const progressData = {
+                    completedModules: Array.from(completedModules),
+                    completedSubmodules: Array.from(completedSubmodules),
+                    quizPassed: quizPassed,
+                };
+                await setDoc(progressDocRef, progressData, { merge: true });
+            } catch (error) {
+                console.error("Error saving progress to Firestore", error);
+            }
+        } else {
+            // Save to localStorage for demo user
+            try {
+                const key = getLocalStorageKey(currentUser.uid);
+                const progressData = {
+                    completedModules: Array.from(completedModules),
+                    completedSubmodules: Array.from(completedSubmodules),
+                    quizPassed: quizPassed,
+                };
+                localStorage.setItem(key, JSON.stringify(progressData));
+            } catch(error) {
+                console.error("Error saving progress to localStorage", error);
+            }
+        }
+    };
+    saveProgress();
+  }, [completedModules, completedSubmodules, quizPassed, currentUser, isInitialLoad]);
 
   const completeModule = useCallback((moduleId: number) => {
     setCompletedModules(prev => new Set(prev).add(moduleId));

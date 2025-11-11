@@ -10,15 +10,25 @@ import ModuleView from './components/ModuleView';
 import CaseStudiesView from './components/CaseStudiesView';
 import FinalQuiz from './components/FinalQuiz';
 import Certificate from './components/Certificate';
-import { saveVideoUrl, getVideoUrl, saveAudioUrl, getAudioUrl } from './lib/db';
+import AdminPanel from './components/AdminPanel';
+import { saveVideoUrl, getAudioUrl } from './lib/db';
 import { getEmbedUrl } from './lib/utils';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import LoginView from './components/LoginView';
+import { isFirebaseConfigured } from './firebase/config';
+
+const FirebaseWarningBanner: React.FC = () => (
+    <div className="bg-yellow-100 border-b-2 border-yellow-300 text-yellow-800 p-3 text-center no-print" role="alert">
+        <p className="font-bold text-sm">Modo de Demostración Activo</p>
+        <p className="text-xs">La aplicación se está ejecutando sin conexión a la base de datos. El progreso se guardará localmente en este navegador. Configure Firebase para habilitar cuentas de usuario y persistencia en la nube.</p>
+    </div>
+);
 
 const MainApp: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.Dashboard);
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { currentUser } = useAuth();
   
   const progressHook = useCourseProgress();
 
@@ -33,6 +43,11 @@ const MainApp: React.FC = () => {
   };
 
   const handleNavigate = (view: View) => {
+    // Route Protection
+    if (view === View.AdminPanel && (currentUser?.role !== 'SUPERADMINISTRADOR' || !isFirebaseConfigured())) {
+      setCurrentView(View.Dashboard);
+      return;
+    }
     setCurrentView(view);
     setSelectedModuleId(null);
     setIsSidebarOpen(false);
@@ -79,6 +94,8 @@ const MainApp: React.FC = () => {
         return <FinalQuiz />;
       case View.Certificate:
         return <Certificate />;
+      case View.AdminPanel:
+        return <AdminPanel />;
       case View.Dashboard:
       default:
         return <CourseDashboard onSelectModule={handleSelectModule} />;
@@ -88,6 +105,7 @@ const MainApp: React.FC = () => {
   return (
     <CourseProgressContext.Provider value={progressHook}>
       <div className="min-h-screen flex flex-col bg-slate-100">
+        {!isFirebaseConfigured() && <FirebaseWarningBanner />}
         <Header onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
         <div className="flex flex-1 overflow-hidden">
           {isSidebarOpen && (
@@ -115,7 +133,7 @@ const MainApp: React.FC = () => {
 
 
 const AppContent: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   
   // Seed the database with media on first load. This only runs once.
   useEffect(() => {
@@ -146,7 +164,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1SKXmmMwUeFblQCODQPtvuV8_UFgABMEc/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_1_1, embedUrl);
+            await getAudioUrl(submoduleId_1_1);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_1_1}:`, error);
@@ -181,7 +199,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1ATYc37TjZB_F9ZVOOcV_l40JhBP6w22d/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_1_2, embedUrl);
+            await getAudioUrl(submoduleId_1_2);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_1_2}:`, error);
@@ -216,7 +234,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1A_mEIhQLEcbiGqNq7Bn-0AJmxAzwgh3h/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_1_3, embedUrl);
+            await getAudioUrl(submoduleId_1_3);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_1_3}:`, error);
@@ -250,7 +268,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1SKXmmMwUeFblQCODQPtvuV8_UFgABMEc/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_2_1, embedUrl);
+            await getAudioUrl(submoduleId_2_1);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_2_1}:`, error);
@@ -284,7 +302,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1XlHvsAVzeJTcjbFdDQcrlpLOWWLmgKkS/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_2_2, embedUrl);
+            await getAudioUrl(submoduleId_2_2);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_2_2}:`, error);
@@ -318,7 +336,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1-daYLdD0iKoBVfYS3o8BcAxXE5br7J05/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_2_3, embedUrl);
+            await getAudioUrl(submoduleId_2_3);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_2_3}:`, error);
@@ -352,7 +370,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1ffmhAPnh-eI2vxVD68jfnj8Ji14WZ0eE/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_3_1, embedUrl);
+            await getAudioUrl(submoduleId_3_1);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_3_1}:`, error);
@@ -369,7 +387,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1NqWChl3g4YBFLxi7wFLIYyubezolfdBE/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_3_2, embedUrl);
+            await getAudioUrl(submoduleId_3_2);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_3_2}:`, error);
@@ -386,7 +404,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1iHgfncK7Ta3sWg0Zkdon9_3MKJ72uk0J/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_3_3, embedUrl);
+            await getAudioUrl(submoduleId_3_3);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_3_3}:`, error);
@@ -419,7 +437,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/16vz5FnJUIDPCPLFNfs4aJfGS3ETv211T/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_4_1, embedUrl);
+            await getAudioUrl(submoduleId_4_1);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_4_1}:`, error);
@@ -436,7 +454,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1piIogBJO95n7fSQprJdYYMrWZ0rZ9L2a/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_4_2, embedUrl);
+            await getAudioUrl(submoduleId_4_2);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_4_2}:`, error);
@@ -453,7 +471,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1_BJtsAWHQnQ0mHFkJ8L15FI1SzIt6GyJ/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_4_3, embedUrl);
+            await getAudioUrl(submoduleId_4_3);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_4_3}:`, error);
@@ -487,7 +505,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1QcKGOfWi-G7Sz8ztEHunnLyOFhjXBk6Q/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_5_1, embedUrl);
+            await getAudioUrl(submoduleId_5_1);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_5_1}:`, error);
@@ -504,7 +522,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1o-rCpIzMy6Jn2I7JjOQbj39AnUuokg9z/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_5_2, embedUrl);
+            await getAudioUrl(submoduleId_5_2);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_5_2}:`, error);
@@ -521,7 +539,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/19Lu4lf3_I_WKlZp6PZlGdogQ7WApgxaf/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_5_3, embedUrl);
+            await getAudioUrl(submoduleId_5_3);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_5_3}:`, error);
@@ -538,7 +556,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1c70XJ1jR52dkHGZGCSOy7ue5yxpDTz77/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_5_4, embedUrl);
+            await getAudioUrl(submoduleId_5_4);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_5_4}:`, error);
@@ -572,7 +590,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1InU7t6zvh7N6R4yDfzgCTpuJU0aA2Uwd/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_6_1, embedUrl);
+            await getAudioUrl(submoduleId_6_1);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_6_1}:`, error);
@@ -589,7 +607,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1Tn_ZgdsnLVFfAvVkO07XJ1iZWBFfn-sL/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_6_2, embedUrl);
+            await getAudioUrl(submoduleId_6_2);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_6_2}:`, error);
@@ -606,7 +624,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1Rq5rPXHK73WsWbWjnP8tq5WwvLGdd_WD/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_6_3, embedUrl);
+            await getAudioUrl(submoduleId_6_3);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_6_3}:`, error);
@@ -638,7 +656,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1_M8FwRPPX3lHN41QCLKNvW_Is8k6G2Av/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_7_1, embedUrl);
+            await getAudioUrl(submoduleId_7_1);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_7_1}:`, error);
@@ -655,7 +673,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1Ff-RaR0SgQw2gdVtkFkdClxmGuvdThvz/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_7_2, embedUrl);
+            await getAudioUrl(submoduleId_7_2);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_7_2}:`, error);
@@ -672,7 +690,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/14186PqZlwVsa4_3uNeFzipEmwagVMU78/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_7_3, embedUrl);
+            await getAudioUrl(submoduleId_7_3);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_7_3}:`, error);
@@ -704,7 +722,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/13pVMncJ2J33nv7HAm1XJR0H9iFcN3kin/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_8_1, embedUrl);
+            await getAudioUrl(submoduleId_8_1);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_8_1}:`, error);
@@ -721,7 +739,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1aPnrc3lik9cbqwqK26_jgi_MuFF1RW1C/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_8_2, embedUrl);
+            await getAudioUrl(submoduleId_8_2);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_8_2}:`, error);
@@ -738,7 +756,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1R_BfvWsVuS1XWl8_K0nnnlR_UUfqfkNe/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_8_3, embedUrl);
+            await getAudioUrl(submoduleId_8_3);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_8_3}:`, error);
@@ -770,7 +788,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1if2XwB2X-TAQsp_zRpWZMwQgWP1A2Oz0/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_9_1, embedUrl);
+            await getAudioUrl(submoduleId_9_1);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_9_1}:`, error);
@@ -787,7 +805,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1Mz8CH6g-WEQTCP5rWarP995iRgkaJQTr/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_9_2, embedUrl);
+            await getAudioUrl(submoduleId_9_2);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_9_2}:`, error);
@@ -804,7 +822,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1iEtDJSy-dAJa_ny7rj4z9npCKop8A55s/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_9_3, embedUrl);
+            await getAudioUrl(submoduleId_9_3);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_9_3}:`, error);
@@ -836,7 +854,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1r43jEqbAsEYsqGV3e9VlkMCVCcemcZVW/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_10_1, embedUrl);
+            await getAudioUrl(submoduleId_10_1);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_10_1}:`, error);
@@ -853,7 +871,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1jcOtXht8cEs4ZZAg4b-gAG9ZrJ10zSsY/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_10_2, embedUrl);
+            await getAudioUrl(submoduleId_10_2);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_10_2}:`, error);
@@ -870,7 +888,7 @@ const AppContent: React.FC = () => {
           const rawUrl = 'https://drive.google.com/file/d/1z_JEiekuSKUsc47s2ugX9eerUTE4G9D8/view?usp=drive_link';
           const embedUrl = getEmbedUrl(rawUrl);
           if (embedUrl) {
-            await saveAudioUrl(submoduleId_10_3, embedUrl);
+            await getAudioUrl(submoduleId_10_3);
           }
         } catch (error) {
           console.error(`Failed to seed audio database for ${submoduleId_10_3}:`, error);
@@ -882,6 +900,14 @@ const AppContent: React.FC = () => {
 
     seedSubmoduleMedia();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <p>Cargando...</p>
+      </div>
+    );
+  }
 
   return currentUser ? <MainApp /> : <LoginView />;
 }
