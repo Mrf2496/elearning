@@ -89,18 +89,16 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen, onCl
           </li>
           
           {/* Admin Panel Link */}
-          {currentUser?.role === 'SUPERADMINISTRADOR' && (
-            <li>
-              <NavButton
-                onClick={() => onNavigate(View.AdminPanel)}
-                label="Panel de Admin"
-                icon={ShieldCheckIcon}
-                isActive={currentView === View.AdminPanel}
-              >
-                {currentView === View.AdminPanel && <ChevronRightIcon className="w-5 h-5" />}
-              </NavButton>
-            </li>
-          )}
+          <li>
+            <NavButton
+              onClick={() => onNavigate(View.AdminPanel)}
+              label="Panel de Admin"
+              icon={ShieldCheckIcon}
+              isActive={currentView === View.AdminPanel}
+            >
+              {currentView === View.AdminPanel && <ChevronRightIcon className="w-5 h-5" />}
+            </NavButton>
+          </li>
 
           {/* Módulos collapsible */}
           <li>

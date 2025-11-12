@@ -33,7 +33,7 @@ export const getUsersByCompany = async (empresaId: string): Promise<User[]> => {
     }
 };
 
-export const editUser = async (uid: string, data: Partial<Pick<User, 'name' | 'role' | 'empresaId'>>): Promise<boolean> => {
+export const editUser = async (uid: string, data: Partial<Pick<User, 'name' | 'empresaId'>>): Promise<boolean> => {
     const services = getFirebaseServices();
     if (!services) return false;
 
@@ -88,9 +88,12 @@ export const deleteUser = async (uid: string): Promise<boolean> => {
         if (userDoc.exists()) {
             const userData = userDoc.data() as User;
             // If the user was an admin, clear the adminId from their company
-            if (userData.role === 'ADMINISTRADOR' && userData.empresaId) {
+            if (userData.empresaId) {
                 const companyDocRef = doc(services.db, 'empresas', userData.empresaId);
-                await updateDoc(companyDocRef, { administradorId: "" });
+                const companyDoc = await getDoc(companyDocRef);
+                if (companyDoc.exists() && companyDoc.data().administradorId === uid) {
+                   await updateDoc(companyDocRef, { administradorId: "" });
+                }
             }
         }
 

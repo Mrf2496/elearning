@@ -134,7 +134,6 @@ export interface User {
   email: string;
   cedula: string;
   password?: string; // Password will be managed by Firebase Auth
-  role: 'SUPERADMINISTRADOR' | 'ADMINISTRADOR' | 'USUARIO';
   isActive: boolean;
   empresaId?: string;
 }

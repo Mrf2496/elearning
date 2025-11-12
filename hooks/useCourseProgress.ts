@@ -8,8 +8,6 @@ const SUBMODULES_WITH_VIDEO = [
     '1-1', '1-2', '1-3', '2-1', '2-2', '2-3', '3-1', '4-1', '5-1', '6-1', '7-1', '8-1', '9-1', '10-1'
 ];
 
-const getLocalStorageKey = (userId: string) => `courseProgress-${userId}`;
-
 export const useCourseProgress = () => {
   const { currentUser } = useAuth();
   
@@ -57,21 +55,7 @@ export const useCourseProgress = () => {
             setIsInitialLoad(false);
         }
       } else {
-        // Load from localStorage for demo user
-        try {
-            const key = getLocalStorageKey(currentUser.uid);
-            const savedProgress = localStorage.getItem(key);
-            if (savedProgress) {
-                const data = JSON.parse(savedProgress);
-                setCompletedModules(new Set(data.completedModules || []));
-                setCompletedSubmodules(new Set(data.completedSubmodules || []));
-                setQuizPassed(data.quizPassed || false);
-            }
-        } catch(error) {
-            console.error("Error loading progress from localStorage", error);
-        } finally {
-            setIsInitialLoad(false);
-        }
+        setIsInitialLoad(false);
       }
     };
     loadProgress();
@@ -96,19 +80,6 @@ export const useCourseProgress = () => {
                 await setDoc(progressDocRef, progressData, { merge: true });
             } catch (error) {
                 console.error("Error saving progress to Firestore", error);
-            }
-        } else {
-            // Save to localStorage for demo user
-            try {
-                const key = getLocalStorageKey(currentUser.uid);
-                const progressData = {
-                    completedModules: Array.from(completedModules),
-                    completedSubmodules: Array.from(completedSubmodules),
-                    quizPassed: quizPassed,
-                };
-                localStorage.setItem(key, JSON.stringify(progressData));
-            } catch(error) {
-                console.error("Error saving progress to localStorage", error);
             }
         }
     };

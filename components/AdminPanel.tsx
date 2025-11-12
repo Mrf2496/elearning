@@ -30,7 +30,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; chi
 };
 
 const UserManagementPanel: React.FC = () => {
-    const { currentUser, register, logout } = useAuth();
+    const { register, logout } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [companies, setCompanies] = useState<Company[]>([]);
     const [loading, setLoading] = useState(true);
@@ -39,49 +39,25 @@ const UserManagementPanel: React.FC = () => {
     const [userToResetPass, setUserToResetPass] = useState<User | null>(null);
     const [userToRestore, setUserToRestore] = useState<User | null>(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    // FIX: Added email field to newUser state.
-    const [newUser, setNewUser] = useState({ name: '', cedula: '', email: '', password: '', role: 'USUARIO' as User['role'], empresaId: '' });
+    const [newUser, setNewUser] = useState({ name: '', cedula: '', email: '', password: '', empresaId: '' });
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-    const [adminCheck, setAdminCheck] = useState<{ running: boolean; error: string | null }>({ running: false, error: null });
-
+    
     const fetchUsers = useCallback(async () => {
         setLoading(true);
-        let userList;
-        if (currentUser?.role === 'ADMINISTRADOR' && currentUser.empresaId) {
-            userList = await userManagement.getUsersByCompany(currentUser.empresaId);
-        } else {
-            userList = await userManagement.getUsersList();
-        }
+        const userList = await userManagement.getUsersList();
         setUsers(userList);
         setLoading(false);
-    }, [currentUser]);
+    }, []);
 
     useEffect(() => {
         fetchUsers();
-        if (currentUser?.role === 'SUPERADMINISTRADOR') {
-            companyManagement.getCompaniesList().then(setCompanies);
-        }
-    }, [fetchUsers, currentUser?.role]);
-
-    useEffect(() => {
-        if (newUser.role === 'ADMINISTRADOR' && newUser.empresaId) {
-            setAdminCheck({ running: true, error: null });
-            companyManagement.checkCompanyHasAdmin(newUser.empresaId).then(hasAdmin => {
-                if (hasAdmin) {
-                    setAdminCheck({ running: false, error: 'Esta empresa ya tiene un administrador asignado.' });
-                } else {
-                    setAdminCheck({ running: false, error: null });
-                }
-            });
-        } else {
-            setAdminCheck({ running: false, error: null });
-        }
-    }, [newUser.role, newUser.empresaId]);
+        companyManagement.getCompaniesList().then(setCompanies);
+    }, [fetchUsers]);
 
     const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!editingUser) return;
-        await userManagement.editUser(editingUser.uid, { name: editingUser.name, role: editingUser.role, empresaId: editingUser.empresaId });
+        await userManagement.editUser(editingUser.uid, { name: editingUser.name, empresaId: editingUser.empresaId });
         setEditingUser(null);
         fetchUsers();
     };
@@ -116,12 +92,7 @@ const UserManagementPanel: React.FC = () => {
     const handleCreateUserSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setFeedback(null);
-        if (adminCheck.error) {
-            setFeedback({ type: 'error', message: adminCheck.error });
-            return;
-        }
-        // FIX: Corrected arguments for the register function.
-        const result = await register(newUser.name, newUser.cedula, newUser.email, newUser.password, newUser.role, newUser.empresaId);
+        const result = await register(newUser.name, newUser.cedula, newUser.email, newUser.password, newUser.empresaId);
         if (result.success) {
             alert('Usuario creado exitosamente. Por razones de seguridad, serás desconectado. Por favor, inicia sesión de nuevo.');
             logout();
@@ -131,8 +102,7 @@ const UserManagementPanel: React.FC = () => {
     };
     
     const openCreateModal = () => {
-        // FIX: Reset email field in newUser state.
-        setNewUser({ name: '', cedula: '', email: '', password: '', role: 'USUARIO', empresaId: currentUser?.role === 'ADMINISTRADOR' ? currentUser.empresaId || '' : '' });
+        setNewUser({ name: '', cedula: '', email: '', password: '', empresaId: '' });
         setFeedback(null);
         setIsCreateModalOpen(true);
     };
@@ -155,8 +125,7 @@ const UserManagementPanel: React.FC = () => {
                         <tr>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cédula</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-                            {currentUser?.role === 'SUPERADMINISTRADOR' && <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>}
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                             <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                         </tr>
@@ -166,8 +135,7 @@ const UserManagementPanel: React.FC = () => {
                             <tr key={user.uid}>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.cedula}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.role}</td>
-                                {currentUser?.role === 'SUPERADMINISTRADOR' && <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{companies.find(c => c.id === user.empresaId)?.nombre || 'N/A'}</td>}
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{companies.find(c => c.id === user.empresaId)?.nombre || 'N/A'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <button onClick={() => handleToggleStatus(user.uid, user.isActive)} title={`Cambiar a ${user.isActive ? 'Inactivo' : 'Activo'}`} className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isActive ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}`}>
                                         {user.isActive ? 'Activo' : 'Inactivo'}
@@ -196,7 +164,6 @@ const UserManagementPanel: React.FC = () => {
                             <label htmlFor="new-cedula" className="block text-sm font-medium text-gray-700">Cédula</label>
                             <input id="new-cedula" type="text" value={newUser.cedula} onChange={e => setNewUser({...newUser, cedula: e.target.value.replace(/\D/g, '')})} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required/>
                         </div>
-                        {/* FIX: Added email input field. */}
                         <div>
                             <label htmlFor="new-email" className="block text-sm font-medium text-gray-700">Email</label>
                             <input id="new-email" type="email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required/>
@@ -206,23 +173,12 @@ const UserManagementPanel: React.FC = () => {
                             <input id="new-password" type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required/>
                         </div>
                          <div>
-                            <label htmlFor="new-role" className="block text-sm font-medium text-gray-700">Rol</label>
-                            <select id="new-role" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value as User['role']})} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                                <option value="USUARIO">USUARIO</option>
-                                <option value="ADMINISTRADOR">ADMINISTRADOR</option>
-                                {currentUser?.role === 'SUPERADMINISTRADOR' && <option value="SUPERADMINISTRADOR">SUPERADMINISTRADOR</option>}
+                            <label htmlFor="new-empresa" className="block text-sm font-medium text-gray-700">Empresa</label>
+                            <select id="new-empresa" value={newUser.empresaId} onChange={e => setNewUser({...newUser, empresaId: e.target.value})} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                <option value="">Seleccione una empresa</option>
+                                {companies.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                             </select>
                         </div>
-                         {currentUser?.role === 'SUPERADMINISTRADOR' && (
-                            <div>
-                                <label htmlFor="new-empresa" className="block text-sm font-medium text-gray-700">Empresa</label>
-                                <select id="new-empresa" value={newUser.empresaId} onChange={e => setNewUser({...newUser, empresaId: e.target.value})} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                    <option value="">Seleccione una empresa</option>
-                                    {companies.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                                </select>
-                            </div>
-                         )}
-                        {adminCheck.error && <p className="text-sm text-red-600">{adminCheck.error}</p>}
                         {feedback && (
                             <div className={`p-3 rounded-md text-sm text-center ${ feedback.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }`}>
                                 {feedback.message}
@@ -231,14 +187,13 @@ const UserManagementPanel: React.FC = () => {
                     </div>
                     <div className="mt-6 flex justify-end space-x-2">
                         <Button type="button" variant="secondary" onClick={() => setIsCreateModalOpen(false)}>Cancelar</Button>
-                        <Button type="submit" disabled={adminCheck.running || !!adminCheck.error}>Crear Usuario</Button>
+                        <Button type="submit">Crear Usuario</Button>
                     </div>
                 </form>
             </Modal>
 
 
             <Modal isOpen={!!editingUser} onClose={() => setEditingUser(null)} title="Editar Usuario">
-                {/* FIX: Added content for Edit User modal. */}
                 {editingUser && (
                     <form onSubmit={handleEditSubmit}>
                         <div className="space-y-4">
@@ -246,25 +201,13 @@ const UserManagementPanel: React.FC = () => {
                                 <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700">Nombre Completo</label>
                                 <input id="edit-name" type="text" value={editingUser.name} onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required/>
                             </div>
-                            {currentUser?.role === 'SUPERADMINISTRADOR' && (
-                                <>
-                                    <div>
-                                        <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700">Rol</label>
-                                        <select id="edit-role" value={editingUser.role} onChange={e => setEditingUser({ ...editingUser, role: e.target.value as User['role'] })} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
-                                            <option value="USUARIO">USUARIO</option>
-                                            <option value="ADMINISTRADOR">ADMINISTRADOR</option>
-                                            <option value="SUPERADMINISTRADOR">SUPERADMINISTRADOR</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label htmlFor="edit-empresa" className="block text-sm font-medium text-gray-700">Empresa</label>
-                                        <select id="edit-empresa" value={editingUser.empresaId} onChange={e => setEditingUser({ ...editingUser, empresaId: e.target.value })} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                                            <option value="">Seleccione una empresa</option>
-                                            {companies.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                                        </select>
-                                    </div>
-                                </>
-                            )}
+                            <div>
+                                <label htmlFor="edit-empresa" className="block text-sm font-medium text-gray-700">Empresa</label>
+                                <select id="edit-empresa" value={editingUser.empresaId} onChange={e => setEditingUser({ ...editingUser, empresaId: e.target.value })} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                                    <option value="">Seleccione una empresa</option>
+                                    {companies.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                                </select>
+                            </div>
                         </div>
                         <div className="mt-6 flex justify-end space-x-2">
                             <Button type="button" variant="secondary" onClick={() => setEditingUser(null)}>Cancelar</Button>
@@ -275,7 +218,6 @@ const UserManagementPanel: React.FC = () => {
             </Modal>
 
             <Modal isOpen={!!userToDelete} onClose={() => setUserToDelete(null)} title="Confirmar Eliminación">
-                {/* FIX: Added content for Delete User modal. */}
                 {userToDelete && (
                     <div>
                         <p>¿Estás seguro de que quieres eliminar al usuario <strong>{userToDelete.name}</strong>?</p>
@@ -289,7 +231,6 @@ const UserManagementPanel: React.FC = () => {
             </Modal>
             
             <Modal isOpen={!!userToResetPass} onClose={() => setUserToResetPass(null)} title="Confirmar Reseteo de Contraseña">
-                {/* FIX: Added content for Reset Password modal. */}
                 {userToResetPass && (
                     <div>
                         <p>¿Estás seguro de que quieres enviar un correo para restablecer la contraseña del usuario <strong>{userToResetPass.name}</strong> (Email: {userToResetPass.email})?</p>
@@ -302,7 +243,6 @@ const UserManagementPanel: React.FC = () => {
             </Modal>
 
              <Modal isOpen={!!userToRestore} onClose={() => setUserToRestore(null)} title="Confirmar Reseteo de Progreso">
-                {/* FIX: Added content for Restore Progress modal. */}
                 {userToRestore && (
                     <div>
                         <p>¿Estás seguro de que quieres borrar todo el progreso del curso para el usuario <strong>{userToRestore.name}</strong>?</p>
@@ -320,7 +260,6 @@ const UserManagementPanel: React.FC = () => {
 
 
 const AdminPanel: React.FC = () => {
-    const { currentUser } = useAuth();
     const [activeTab, setActiveTab] = useState<'users' | 'companies'>('users');
 
     return (
@@ -335,28 +274,26 @@ const AdminPanel: React.FC = () => {
                 </div>
             </Card>
 
-            {currentUser?.role === 'SUPERADMINISTRADOR' && (
-                <div className="border-b border-gray-200">
-                    <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-                        <button
-                            onClick={() => setActiveTab('users')}
-                            className={`${activeTab === 'users' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                        >
-                            Gestión de Usuarios
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('companies')}
-                            className={`${activeTab === 'companies' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                        >
-                            Gestión de Empresas
-                        </button>
-                    </nav>
-                </div>
-            )}
+            <div className="border-b border-gray-200">
+                <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button
+                        onClick={() => setActiveTab('users')}
+                        className={`${activeTab === 'users' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    >
+                        Gestión de Usuarios
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('companies')}
+                        className={`${activeTab === 'companies' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    >
+                        Gestión de Empresas
+                    </button>
+                </nav>
+            </div>
             
             <div>
                 {activeTab === 'users' && <UserManagementPanel />}
-                {activeTab === 'companies' && currentUser?.role === 'SUPERADMINISTRADOR' && <CompanyManagement />}
+                {activeTab === 'companies' && <CompanyManagement />}
             </div>
         </div>
     )
