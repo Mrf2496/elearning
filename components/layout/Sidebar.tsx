@@ -10,8 +10,6 @@ import ChevronRightIcon from '../icons/ChevronRightIcon';
 import LockIcon from '../icons/LockIcon';
 import XIcon from '../icons/XIcon';
 import CheckCircleIcon from '../icons/CheckCircleIcon';
-import ShieldCheckIcon from '../icons/ShieldCheckIcon';
-import { useAuth } from '../../hooks/useAuth';
 
 interface SidebarProps {
   currentView: View;
@@ -54,7 +52,6 @@ const NavButton: React.FC<{
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen, onClose, onSelectModule, selectedModuleId }) => {
   const progressContext = useContext(CourseProgressContext);
-  const { currentUser } = useAuth();
   const [isModulesExpanded, setIsModulesExpanded] = useState(true);
 
   if (!progressContext) return null;
@@ -88,18 +85,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen, onCl
             </NavButton>
           </li>
           
-          {/* Admin Panel Link */}
-          <li>
-            <NavButton
-              onClick={() => onNavigate(View.AdminPanel)}
-              label="Panel de Admin"
-              icon={ShieldCheckIcon}
-              isActive={currentView === View.AdminPanel}
-            >
-              {currentView === View.AdminPanel && <ChevronRightIcon className="w-5 h-5" />}
-            </NavButton>
-          </li>
-
           {/* Módulos collapsible */}
           <li>
             <NavButton

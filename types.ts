@@ -112,28 +112,24 @@ export enum View {
   CaseStudies,
   Quiz,
   Certificate,
-  AdminPanel,
-}
-
-export interface Company {
-  id: string;
-  nombre: string;
-  nit: string;
-  direccion: string;
-  telefono: string;
-  email: string;
-  logo?: string;
-  activa: boolean;
-  fechaCreacion: any; // Firestore Timestamp
-  administradorId?: string;
 }
 
 export interface User {
   uid: string;
   name: string;
-  email: string;
   cedula: string;
-  password?: string; // Password will be managed by Firebase Auth
-  isActive: boolean;
-  empresaId?: string;
+  email: string;
+  role?: 'user' | 'superadmin' | 'admin';
+  active?: boolean;
+  progress?: {
+    completedSubmodules: string[];
+    quizPassed: boolean;
+  }
+}
+
+export enum AdminView {
+    Dashboard = 'Dashboard',
+    Users = 'Users',
+    Companies = 'Companies',
+    Reports = 'Reports',
 }

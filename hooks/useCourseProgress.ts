@@ -1,8 +1,10 @@
+
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { courseData } from '../constants/courseData';
 import { useAuth } from './useAuth';
-import { getFirebaseServices, isFirebaseConfigured } from '../firebase/config';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { User } from '../types';
+import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase.config';
 
 const SUBMODULES_WITH_VIDEO = [
     '1-1', '1-2', '1-3', '2-1', '2-2', '2-3', '3-1', '4-1', '5-1', '6-1', '7-1', '8-1', '9-1', '10-1'
@@ -10,89 +12,71 @@ const SUBMODULES_WITH_VIDEO = [
 
 export const useCourseProgress = () => {
   const { currentUser } = useAuth();
-  
+
   const [completedModules, setCompletedModules] = useState<Set<number>>(new Set());
   const [completedSubmodules, setCompletedSubmodules] = useState<Set<string>>(new Set());
   const [quizPassed, setQuizPassed] = useState<boolean>(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  const saveProgressToFirestore = useCallback(async (progressData: Partial<User['progress']>) => {
+      if (currentUser?.uid) {
+          const userDocRef = doc(db, 'users', currentUser.uid);
+          try {
+              // Ensure the progress object exists before trying to merge
+              const userDoc = await getDoc(userDocRef);
+              // FIX: Cast user document data to access the 'progress' property safely.
+              const existingProgress = (userDoc.data() as { progress?: User['progress'] })?.progress || {};
+              
+              const mergedProgress = {
+                  ...existingProgress,
+                  ...progressData,
+              };
+
+              // Use setDoc with merge to create the field if it doesn't exist
+              await setDoc(userDocRef, { progress: mergedProgress }, { merge: true });
+          } catch (e) {
+              console.error("Error saving progress to Firestore:", e);
+          }
+      }
+  }, [currentUser]);
 
   // Load progress
   useEffect(() => {
-    const loadProgress = async () => {
-      if (!currentUser) {
-        // Reset progress on logout
-        setCompletedModules(new Set());
-        setCompletedSubmodules(new Set());
-        setQuizPassed(false);
-        setIsInitialLoad(true);
-        return;
-      }
+    if (currentUser) {
+      // Firestore is the source of truth
+      const userProgress = currentUser.progress;
 
-      if (isFirebaseConfigured()) {
-        const services = getFirebaseServices();
-        if (!services) {
-          setIsInitialLoad(false);
-          return;
-        }
-        const { db } = services;
-        try {
-          const progressDocRef = doc(db, 'userProgress', currentUser.uid);
-          const progressDoc = await getDoc(progressDocRef);
-          
-          if (progressDoc.exists()) {
-            const data = progressDoc.data();
-            setCompletedModules(new Set(data.completedModules || []));
-            setCompletedSubmodules(new Set(data.completedSubmodules || []));
-            setQuizPassed(data.quizPassed || false);
-          } else {
-            setCompletedModules(new Set());
-            setCompletedSubmodules(new Set());
-            setQuizPassed(false);
-          }
-        } catch (error) {
-          console.error("Error loading progress from Firestore", error);
-        } finally {
-            setIsInitialLoad(false);
-        }
-      } else {
-        setIsInitialLoad(false);
-      }
-    };
-    loadProgress();
+      const submodulesFromDb = userProgress?.completedSubmodules ? new Set(userProgress.completedSubmodules) : new Set<string>();
+      const quizFromDb = userProgress?.quizPassed || false;
+
+      setCompletedSubmodules(submodulesFromDb);
+      setQuizPassed(quizFromDb);
+      
+    } else {
+      // Reset progress on logout
+      setCompletedModules(new Set());
+      setCompletedSubmodules(new Set());
+      setQuizPassed(false);
+    }
   }, [currentUser]);
 
-  // Save progress
-  useEffect(() => {
-    const saveProgress = async () => {
-        if (!currentUser || isInitialLoad) return;
-
-        if (isFirebaseConfigured()) {
-            const services = getFirebaseServices();
-            if (!services) return;
-            const { db } = services;
-            try {
-                const progressDocRef = doc(db, 'userProgress', currentUser.uid);
-                const progressData = {
-                    completedModules: Array.from(completedModules),
-                    completedSubmodules: Array.from(completedSubmodules),
-                    quizPassed: quizPassed,
-                };
-                await setDoc(progressDocRef, progressData, { merge: true });
-            } catch (error) {
-                console.error("Error saving progress to Firestore", error);
-            }
-        }
-    };
-    saveProgress();
-  }, [completedModules, completedSubmodules, quizPassed, currentUser, isInitialLoad]);
 
   const completeModule = useCallback((moduleId: number) => {
     setCompletedModules(prev => new Set(prev).add(moduleId));
   }, []);
   
   const completeSubmodule = useCallback((submoduleId: string) => {
-    setCompletedSubmodules(prev => new Set(prev).add(submoduleId));
-  }, []);
+    setCompletedSubmodules(prev => {
+        const newSet = new Set(prev).add(submoduleId);
+        const newProgress = { completedSubmodules: Array.from(newSet) };
+        saveProgressToFirestore(newProgress);
+        return newSet;
+    });
+  }, [saveProgressToFirestore]);
+
+  const setQuizPassedState = useCallback((passed: boolean) => {
+    setQuizPassed(passed);
+    saveProgressToFirestore({ quizPassed: passed });
+  }, [saveProgressToFirestore]);
 
   const isModuleCompleted = useCallback((moduleId: number): boolean => {
     const isAlreadyMarkedComplete = completedModules.has(moduleId);
@@ -226,7 +210,7 @@ export const useCourseProgress = () => {
       completedSubmodules,
       completeSubmodule,
       quizPassed,
-      setQuizPassed,
+      setQuizPassed: setQuizPassedState,
       isModuleCompleted,
       getCourseProgress,
       getModuleProgress,

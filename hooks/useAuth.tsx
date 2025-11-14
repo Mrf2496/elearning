@@ -1,246 +1,241 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { User } from '../types';
-import { getFirebaseServices, isFirebaseConfigured } from '../firebase/config';
+import { auth, db } from '../lib/firebase.config';
 import { 
-  createUserWithEmailAndPassword, 
+  onAuthStateChanged, 
   signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged,
-  User as FirebaseUser,
-  deleteUser as deleteAuthUser,
-  signInAnonymously,
+  createUserWithEmailAndPassword, 
+  signOut,
+  sendPasswordResetEmail,
+  User as FirebaseUser
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, getDocs, collection, query, where, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
-  login: (cedula: string, password: string) => Promise<{ success: boolean; message: string }>;
-  register: (name: string, cedula: string, email: string, password: string, empresaId?: string) => Promise<{ success: boolean; message: string }>;
-  publicRegister?: (name: string, cedula: string, email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  login: (identifier: string, password: string) => Promise<{ success: boolean; message: string }>;
+  register: (name: string, cedula: string, email: string, password: string, role: 'user' | 'admin') => Promise<{ success: boolean; message: string }>;
   logout: () => void;
+  resetPassword: (email: string) => Promise<{ success: boolean; message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const USERS_COLLECTION = 'users';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isFirebaseConfigured()) {
-      const services = getFirebaseServices();
-      if (!services) {
-          console.error("Firebase services failed to initialize despite configuration being present.");
-          // No user will be set, so app will show LoginView
-          setLoading(false);
-          return;
-      }
-      const { auth, db } = services;
-
-      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-        if (firebaseUser && !firebaseUser.isAnonymous) {
-          const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
-          if (userDocSnap.exists()) {
-            setCurrentUser({ uid: firebaseUser.uid, ...userDocSnap.data() } as User);
-          } else {
-            // This can happen if a user is created in Auth but Firestore doc creation fails
-            // and cleanup also fails. In this case, log them out.
-            console.warn("User document not found for authenticated user. Logging out.");
-            await signOut(auth);
-            setCurrentUser(null);
-          }
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        const userDocRef = doc(db, USERS_COLLECTION, firebaseUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          const data = userDocSnap.data() as User;
+           if (data.active === false) {
+             // If user is inactive, sign them out.
+             // This handles cases where an admin deactivates an active session.
+             await signOut(auth);
+             setCurrentUser(null);
+           } else {
+             const userWithDefaults: User = {
+                 uid: firebaseUser.uid,
+                 name: data.name || 'Usuario',
+                 cedula: data.cedula || '',
+                 email: data.email || firebaseUser.email || '',
+                 role: data.role || 'user',
+                 active: data.active !== undefined ? data.active : true,
+                 progress: data.progress || { completedSubmodules: [], quizPassed: false }
+             };
+             setCurrentUser(userWithDefaults);
+           }
         } else {
+          // If no user document exists, something is wrong, so sign out.
+          await signOut(auth);
           setCurrentUser(null);
         }
-        setLoading(false);
-      });
-
-      return () => unsubscribe();
-    } else {
-      // If Firebase is not configured, show login screen, do not fallback to demo mode.
+      } else {
+        setCurrentUser(null);
+      }
       setLoading(false);
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const login = async (cedula: string, password: string): Promise<{ success: boolean; message: string }> => {
-    if (!isFirebaseConfigured()) {
-        return { success: false, message: 'La base de datos no está configurada. No se puede iniciar sesión.' };
-    }
-    const services = getFirebaseServices();
-    if (!services) return { success: false, message: 'Error al inicializar los servicios de Firebase.' };
-    const { auth, db } = services;
-    
+  const login = async (identifier: string, password: string): Promise<{ success: boolean; message: string }> => {
     try {
-      // Use a temporary anonymous session to query Firestore securely
-      await signInAnonymously(auth);
+      const isEmail = identifier.includes('@');
       
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where("cedula", "==", cedula));
+      // 1. Find user data (by cedula or email) and check active status before attempting auth
+      const usersRef = collection(db, USERS_COLLECTION);
+      const fieldToQuery = isEmail ? 'email' : 'cedula';
+
+      if (!isEmail && !/^\d+$/.test(identifier)) {
+        return { success: false, message: 'La Cédula debe contener solo números.' };
+      }
+      
+      const q = query(usersRef, where(fieldToQuery, '==', identifier));
       const querySnapshot = await getDocs(q);
-
-      // Sign out the anonymous user immediately after the query
-      await signOut(auth);
-
+      
       if (querySnapshot.empty) {
-        return { success: false, message: 'Cédula no registrada.' };
+        return { success: false, message: 'Cédula/Correo o contraseña incorrectos.' };
       }
       
       const userDoc = querySnapshot.docs[0];
-      const userData = { uid: userDoc.id, ...userDoc.data() } as User;
+      const userData = userDoc.data() as User;
       
-      if (!userData.isActive) {
-        return { success: false, message: 'Esta cuenta ha sido desactivada. Contacte al administrador.' };
+      if (userData.active === false) {
+          return { success: false, message: 'Tu cuenta ha sido desactivada. Contacta al administrador.' };
       }
 
       const email = userData.email;
-      
-      // Authenticate with the actual user credentials
+
+      // 2. Attempt to sign in
       await signInWithEmailAndPassword(auth, email, password);
-
+      
       return { success: true, message: 'Inicio de sesión exitoso.' };
+
     } catch (error: any) {
-       // Ensure anonymous user is signed out on error
-       if (auth.currentUser && auth.currentUser.isAnonymous) {
-         await signOut(auth);
-       }
-       console.error("Login error:", error);
-      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        return { success: false, message: 'Contraseña incorrecta.' };
+      console.error("Login error:", error);
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/invalid-credential':
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+            return { success: false, message: 'Cédula/Correo o contraseña incorrectos. Por favor, verifica tus datos.' };
+          case 'auth/too-many-requests':
+            return { success: false, message: 'Acceso bloqueado temporalmente por demasiados intentos fallidos. Intenta más tarde.' };
+          case 'auth/network-request-failed':
+            return { success: false, message: 'Error de red. Por favor, comprueba tu conexión a internet.' };
+          default:
+            return { success: false, message: 'Ocurrió un error inesperado al iniciar sesión.' };
+        }
       }
-      return { success: false, message: 'Ocurrió un error al iniciar sesión.' };
+      
+      return { success: false, message: 'Ocurrió un error inesperado al iniciar sesión.' };
     }
   };
 
-  // For admin user creation
-  const register = async (name: string, cedula: string, email: string, password: string, empresaId?: string): Promise<{ success: boolean; message: string }> => {
-     if (!isFirebaseConfigured()) {
-        return { success: false, message: 'La base de datos no está configurada. No se puede registrar.' };
-    }
-    const services = getFirebaseServices();
-    if (!services) return { success: false, message: 'Error al inicializar los servicios de Firebase.' };
-    const { auth, db } = services;
-
-     try {
-        // This check is performed by an authenticated admin, so it should have permissions.
-        if (cedula) {
-            const usersRef = collection(db, 'users');
-            const q = query(usersRef, where("cedula", "==", cedula));
-            const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-                return { success: false, message: 'La cédula ya está registrada.' };
-            }
-        }
-
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const firebaseUser = userCredential.user;
-
-        const newUser: Omit<User, 'uid' | 'password'> = {
-            name,
-            cedula,
-            email,
-            isActive: true,
-            empresaId: empresaId || '',
-        };
-
-        await setDoc(doc(db, "users", firebaseUser.uid), newUser);
-        
-        return { success: true, message: 'Usuario creado exitosamente.' };
-    } catch (error: any) {
-        console.error("Registration error:", error);
-        if (error.code === 'auth/email-already-in-use') {
-            return { success: false, message: 'El correo electrónico ya está registrado.' };
-        }
-        if (error.code === 'auth/weak-password') {
-            return { success: false, message: 'La contraseña debe tener al menos 6 caracteres.' };
-        }
-        return { success: false, message: 'Ocurrió un error durante el registro.' };
-    }
-  };
-
-  // For public user registration
-  const publicRegister = async (name: string, cedula: string, email: string, password: string): Promise<{ success: boolean; message: string }> => {
-    let firebaseUser: FirebaseUser | null = null;
-    const services = getFirebaseServices();
-    if (!services) {
-      return { success: false, message: 'El registro no está disponible. No se pudo conectar a la base de datos.' };
-    }
-    const { auth, db } = services;
-
+  const register = async (name: string, cedula: string, email: string, password: string, role: 'user' | 'admin'): Promise<{ success: boolean; message: string }> => {
     try {
-      // Step 1: Check uniqueness using a temporary anonymous session
-      await signInAnonymously(auth);
-      const usersRef = collection(db, 'users');
-      const cedulaQuery = query(usersRef, where("cedula", "==", cedula));
+      // Check if cedula or email already exists in Firestore
+      const cedulaQuery = query(collection(db, USERS_COLLECTION), where('cedula', '==', cedula));
       const cedulaSnapshot = await getDocs(cedulaQuery);
-      await signOut(auth); // Clean up anonymous session immediately
-
       if (!cedulaSnapshot.empty) {
-        return { success: false, message: 'La cédula ya está registrada en el sistema.' };
+        return { success: false, message: 'La cédula ya está registrada.' };
       }
 
-      // Step 2. Create Auth user
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      firebaseUser = userCredential.user;
+      const emailQuery = query(collection(db, USERS_COLLECTION), where('email', '==', email));
+      const emailSnapshot = await getDocs(emailQuery);
+      if (!emailSnapshot.empty) {
+          return { success: false, message: 'El correo electrónico ya está registrado.' };
+      }
+      
+      // Implement Admin Limit
+      if (role === 'admin') {
+          const adminsQuery = query(collection(db, USERS_COLLECTION), where('role', '==', 'admin'));
+          const adminsSnapshot = await getDocs(adminsQuery);
+          if (adminsSnapshot.size >= 2) {
+              return { success: false, message: 'Límite de administradores alcanzado (máximo 2)' };
+          }
+      }
 
-      // Step 3. Create Firestore user document (user is now authenticated)
-      const newUser: Omit<User, 'uid' | 'password'> = {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const { uid } = userCredential.user;
+
+      // Store additional user info in Firestore
+      await setDoc(doc(db, USERS_COLLECTION, uid), {
+        uid,
         name,
         cedula,
         email,
-        isActive: true,
-        empresaId: '',
-      };
-      await setDoc(doc(db, "users", firebaseUser.uid), newUser);
-
-      // Step 4. Logout user after registration to force login
-      await signOut(auth);
-
-      return { success: true, message: '¡Registro exitoso! Por favor, inicia sesión para continuar.' };
-
-    } catch (error: any) {
-      // If any step after auth user creation fails, try to clean it up.
-      if (firebaseUser) {
-        await deleteAuthUser(firebaseUser).catch(e => console.error("Failed to cleanup auth user on registration error:", e));
-      }
-      
-      console.error("Public registration error:", error);
-      
-      // Handle known error codes from Firebase Auth
-      if (error.code) {
-        switch (error.code) {
-          case 'auth/email-already-in-use':
-            return { success: false, message: 'El correo electrónico ya está en uso.' };
-          case 'auth/weak-password':
-            return { success: false, message: 'La contraseña debe tener al menos 6 caracteres.' };
-          case 'auth/invalid-email':
-            return { success: false, message: 'El correo electrónico no es válido.' };
+        role: role,
+        active: true,
+        progress: {
+            completedSubmodules: [],
+            quizPassed: false,
         }
+      });
+
+      // Create adminPermissions document if role is admin
+      if (role === 'admin') {
+          await setDoc(doc(db, 'adminPermissions', uid), {
+              userId: uid,
+              permissions: {
+                  canManageUsers: false,
+                  canManageCompanies: false,
+
+                  canViewReports: false,
+                  canEditCourses: false,
+              }
+          });
       }
 
-      // Return the actual error message or a generic one
-      return { success: false, message: error.message || 'Ocurrió un error inesperado durante el registro.' };
+
+      return { success: true, message: 'Registro exitoso. Ahora puedes iniciar sesión.' };
+    } catch (error: any) {
+        console.error("Registration error:", error);
+        if (error.code) {
+          switch (error.code) {
+            case 'auth/email-already-in-use':
+              return { success: false, message: 'El correo electrónico ya está registrado por otro usuario.' };
+            case 'auth/weak-password':
+              return { success: false, message: 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.' };
+            case 'auth/invalid-email':
+              return { success: false, message: 'El correo electrónico proporcionado no es válido.' };
+            case 'auth/network-request-failed':
+              return { success: false, message: 'Error de red. Por favor, comprueba tu conexión a internet.' };
+            default:
+              return { success: false, message: 'Ocurrió un error inesperado durante el registro.' };
+          }
+        }
+        return { success: false, message: 'Ocurrió un error inesperado durante el registro.' };
     }
   };
-
 
   const logout = async () => {
-    if (!isFirebaseConfigured()) {
-        console.error("Logout is not available when Firebase is not configured.");
-        return;
-    }
-    const services = getFirebaseServices();
-    if (!services) return;
+    await signOut(auth);
+    setCurrentUser(null);
+  };
+
+  const resetPassword = async (email: string): Promise<{ success: boolean; message: string }> => {
     try {
-      await signOut(services.auth);
-    } catch (error) {
-      console.error("Logout error:", error);
+        await sendPasswordResetEmail(auth, email);
+        return { success: true, message: 'Se ha enviado un correo para restablecer tu contraseña.' };
+    } catch (error: any) {
+        console.error("Reset password error:", error);
+        let message = 'Ocurrió un error al enviar el correo de restablecimiento.';
+        if (error.code) {
+            switch(error.code) {
+                case 'auth/invalid-email':
+                    message = 'El correo electrónico proporcionado no es válido.';
+                    break;
+                case 'auth/user-not-found':
+                    message = 'No se encontró ningún usuario con este correo electrónico.';
+                    break;
+                case 'auth/network-request-failed':
+                    message = 'Error de red. Por favor, comprueba tu conexión a internet.';
+                    break;
+                case 'auth/too-many-requests':
+                    message = 'Demasiadas solicitudes. Intenta de nuevo más tarde.';
+                    break;
+            }
+        }
+        return { success: false, message };
     }
   };
 
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen"><div>Cargando...</div></div>;
+  }
+
   return (
-    <AuthContext.Provider value={{ currentUser, loading, login, register, publicRegister, logout }}>
+    <AuthContext.Provider value={{ currentUser, loading, login, register, logout, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

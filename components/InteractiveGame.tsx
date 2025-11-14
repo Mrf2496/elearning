@@ -901,6 +901,7 @@ const CrosswordGame: React.FC<InteractiveGameProps> = ({ game, onComplete }) => 
                                     <div key={key} className="relative w-8 h-8 bg-white">
                                         {cellData.number && <span className="absolute top-0 left-0.5 text-[0.6rem] font-bold text-slate-500">{cellData.number}</span>}
                                         <input
+                                            // FIX: The ref callback should not return a value. Wrapped in braces to fix the type error.
                                             ref={ref => { inputRefs.current.set(key, ref); }}
                                             type="text"
                                             maxLength={1}
